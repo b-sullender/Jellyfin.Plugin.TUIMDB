@@ -36,4 +36,10 @@ public class TuimdbMovieSearchResult
     /// </summary>
     [JsonPropertyName("Match Score")]
     public int MatchScore { get; set; }
+
+    /// <summary>
+    /// Gets or sets the primary poster of the movie.
+    /// </summary>
+    [JsonPropertyName("Primary Poster")]
+    public TuimdbMoviePoster? PrimaryPoster { get; set; }
 }

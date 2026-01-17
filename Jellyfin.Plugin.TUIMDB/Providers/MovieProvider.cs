@@ -118,6 +118,74 @@ public class MovieProvider :
     }
 
     /// <summary>
+    /// Sends a GET request to the specified URL, logs headers and errors,
+    /// and deserializes the JSON response into the specified type.
+    /// </summary>
+    /// <typeparam name="T">The expected type of the JSON response.</typeparam>
+    /// <param name="url">The request URL.</param>
+    /// <param name="apiKey">The TUIMDB API key.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The deserialized response, or null if the request failed.</returns>
+    private async Task<T?> GetFromApiAsync<T>(string url, string? apiKey, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        // Add API key header if provided
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            request.Headers.Add("apiKey", apiKey);
+        }
+
+        // Log HttpClient default headers
+        foreach (var header in _httpClient.DefaultRequestHeaders)
+        {
+            _logger.LogDebug(
+                "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                header.Key,
+                string.Join(", ", header.Value));
+        }
+
+        // Log request-specific headers
+        foreach (var header in request.Headers)
+        {
+            _logger.LogDebug(
+                "TUIMDB API: Request Header: {Name} = {Values}",
+                header.Key,
+                string.Join(", ", header.Value));
+        }
+
+        try
+        {
+            using var httpResponse = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                string content = await httpResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogError(
+                    "TUIMDB API: HTTP request failed.\nStatus Code: {StatusCode}\nReason: {ReasonPhrase}\nURL: {Url}\nResponse Content: {Content}",
+                    httpResponse.StatusCode,
+                    httpResponse.ReasonPhrase,
+                    url,
+                    content);
+                return default;
+            }
+
+            var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            if (response == null)
+            {
+                _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+            }
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TUIMDB API: Failed to fetch data from URL {Url}", url);
+            return default;
+        }
+    }
+
+    /// <summary>
     /// Gets search results for a given <see cref="MovieInfo"/>.
     /// </summary>
     /// <param name="searchInfo">The movie search information.</param>
@@ -141,6 +209,9 @@ public class MovieProvider :
 
         _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
 
+        // Get user metadata language
+        string metadataLanguage = searchInfo.MetadataLanguage ?? "en";
+
         // Check plugin configuration exists
         if (Plugin.Instance?.Configuration == null)
         {
@@ -149,55 +220,11 @@ public class MovieProvider :
         }
 
         var config = Plugin.Instance.Configuration;
-        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
 
-        _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
+        _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
 
-        List<TuimdbMovieSearchResult>? response;
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-        // Log all default headers and their values
-        foreach (var header in _httpClient.DefaultRequestHeaders)
-        {
-            _logger.LogDebug(
-                "TUIMDB GetSearchResults: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
-
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB GetSearchResults: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
-
-        try
-        {
-            using var httpResponse = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            if (!httpResponse.IsSuccessStatusCode)
-            {
-                string content = await httpResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                _logger.LogError(
-                    "TUIMDB Search: HTTP request failed.\nStatus Code: {StatusCode}\nReason: {ReasonPhrase}\nURL: {Url}\nResponse Content: {Content}",
-                    httpResponse.StatusCode,
-                    httpResponse.ReasonPhrase,
-                    url,
-                    content);
-                return new List<RemoteSearchResult>();
-            }
-
-            response = await httpResponse.Content.ReadFromJsonAsync<List<TuimdbMovieSearchResult>>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "TUIMDB Search: Failed to fetch search results.");
-            return new List<RemoteSearchResult>();
-        }
-
+        var response = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
         if (response == null || response.Count == 0)
         {
             _logger.LogDebug("TUIMDB Search: No results found.");
@@ -218,6 +245,12 @@ public class MovieProvider :
                 Name = movie.Title,
                 ProductionYear = movie.ReleaseYear
             };
+
+            if (movie.PrimaryPoster != null)
+            {
+                result.ImageUrl = $"{config.MoviePostersUrl}/{movie.PrimaryPoster.Name}";
+            }
+
             result.ProviderIds["TUIMDB"] = movie.Uid.ToString(CultureInfo.InvariantCulture);
             results.Add(result);
         }
