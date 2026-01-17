@@ -82,4 +82,30 @@ public class TuimdbMovie
     /// </summary>
     [JsonPropertyName("Primary Poster")]
     public TuimdbMoviePoster? PrimaryPoster { get; set; }
+
+    /// <summary>
+    /// Gets the list of backdrops for the movie.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Backdrops")]
+    public Collection<TuimdbMovieBackdrop> Backdrops { get; private set; } = new();
+
+    /// <summary>
+    /// Gets or sets the primary backdrop for the movie.
+    /// </summary>
+    [JsonPropertyName("Primary Backdrop")]
+    public TuimdbMovieBackdrop? PrimaryBackdrop { get; set; }
+
+    /// <summary>
+    /// Gets the list of Logos for the movie.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Logos")]
+    public Collection<TuimdbMovieLogo> Logos { get; private set; } = new();
+
+    /// <summary>
+    /// Gets or sets the primary logo for the movie.
+    /// </summary>
+    [JsonPropertyName("Primary Logo")]
+    public TuimdbMovieLogo? PrimaryLogo { get; set; }
 }
