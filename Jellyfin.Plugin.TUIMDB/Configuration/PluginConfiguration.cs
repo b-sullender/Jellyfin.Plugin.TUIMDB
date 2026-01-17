@@ -3,23 +3,7 @@ using MediaBrowser.Model.Plugins;
 namespace Jellyfin.Plugin.TUIMDB.Configuration;
 
 /// <summary>
-/// The configuration options.
-/// </summary>
-public enum SomeOptions
-{
-    /// <summary>
-    /// Option one.
-    /// </summary>
-    OneOption,
-
-    /// <summary>
-    /// Second option.
-    /// </summary>
-    AnotherOption
-}
-
-/// <summary>
-/// Plugin configuration.
+/// Configuration for the TUIMDB plugin.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
@@ -28,30 +12,21 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration()
     {
-        // set default options here
-        Options = SomeOptions.AnotherOption;
-        TrueFalseSetting = true;
-        AnInteger = 2;
-        AString = "string";
+        ApiKey = string.Empty;
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether some true or false setting is enabled..
+    /// Gets or sets the API base URL.
     /// </summary>
-    public bool TrueFalseSetting { get; set; }
+    public string ApiBaseUrl { get; set; } = "https://tuimdb.com/api";
 
     /// <summary>
-    /// Gets or sets an integer setting.
+    /// Gets or sets the URL where movie posters are hosted.
     /// </summary>
-    public int AnInteger { get; set; }
+    public string MoviePostersUrl { get; set; } = "https://tuimdb.com/movies/posters";
 
     /// <summary>
-    /// Gets or sets a string setting.
+    /// Gets or sets the API key.
     /// </summary>
-    public string AString { get; set; }
-
-    /// <summary>
-    /// Gets or sets an enum option.
-    /// </summary>
-    public SomeOptions Options { get; set; }
+    public string ApiKey { get; set; } = string.Empty;
 }
