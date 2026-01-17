@@ -48,7 +48,8 @@ public class MovieProvider :
     /// </summary>
     private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
     {
-        WriteIndented = true
+        WriteIndented = true,
+        IncludeFields = true
     };
 
     /// <summary>
@@ -273,6 +274,7 @@ public class MovieProvider :
             JsonSerializer.Serialize(info, _jsonOptions));
 
         var result = new MetadataResult<Movie>();
+        result.HasMetadata = false;
 
         // Use Year from MovieInfo if available, otherwise extract from Path
         int? year = info.Year ?? ExtractYearFromPath(info.Path);
@@ -284,6 +286,9 @@ public class MovieProvider :
 
         _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
 
+        // Get user metadata language
+        string metadataLanguage = info.MetadataLanguage ?? "en";
+
         // Check plugin configuration exists
         if (Plugin.Instance?.Configuration == null)
         {
@@ -292,14 +297,66 @@ public class MovieProvider :
         }
 
         var config = Plugin.Instance.Configuration;
-        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
 
+        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
         _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
 
-        // Code placeholder
-        await Task.CompletedTask.ConfigureAwait(false);
+        var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        if (searchResults == null || searchResults.Count == 0)
+        {
+            _logger.LogDebug("TUIMDB Search: No results found.");
+            return result;
+        }
 
-        result.HasMetadata = false;
+        var movieUid = searchResults[0].Uid;
+
+        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}";
+        _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+
+        var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        if (movieInfo == null)
+        {
+            _logger.LogDebug("TUIMDB Details: Failed to get movie info with UID {Uid}.", movieUid);
+            return result;
+        }
+
+        _logger.LogDebug(
+            "TUIMDB GetMetadata Movie Info dump: {MetadataJson}",
+            JsonSerializer.Serialize(movieInfo, _jsonOptions));
+
+        var movie = new Movie();
+        movie.SetProviderId("TUIMDB", movieUid.ToString(CultureInfo.InvariantCulture));
+
+        movie.Name = movieInfo.Title;
+        movie.Overview = movieInfo.Overview;
+        movie.ProductionYear = movieInfo.ReleaseYear;
+
+        foreach (var genre in movieInfo.Genres)
+        {
+            movie.AddGenre(genre.Name);
+            _logger.LogDebug("Added genre: {Genre}", genre.Name);
+        }
+
+        if (movieInfo.PrimaryPoster != null)
+        {
+            result.RemoteImages.Add((
+                $"{config.MoviePostersUrl}/{movieInfo.PrimaryPoster.Name}",
+                ImageType.Primary
+            ));
+        }
+
+        result.HasMetadata = true;
+        result.Provider = "TUIMDB";
+        result.ResultLanguage = movieInfo.LanguageCode;
+        result.Item = movie;
+
+        _logger.LogDebug(
+            "TUIMDB GetMetadata Movie Class dump: {MetadataJson}",
+            JsonSerializer.Serialize(movie, _jsonOptions));
+
+        _logger.LogDebug(
+            "TUIMDB GetMetadata MetadataResult<Movie> dump: {MetadataJson}",
+            JsonSerializer.Serialize(result, _jsonOptions));
 
         return result;
     }
