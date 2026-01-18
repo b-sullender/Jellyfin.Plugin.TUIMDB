@@ -253,7 +253,7 @@ public class MovieProvider :
 
             if (movie.PrimaryPoster != null)
             {
-                result.ImageUrl = $"{config.MoviePostersUrl}/{movie.PrimaryPoster.Name}";
+                result.ImageUrl = $"{config.MoviePostersUrl}/low-res/w400/{movie.PrimaryPoster.Name}";
             }
 
             result.ProviderIds["TUIMDB"] = movie.Uid.ToString(CultureInfo.InvariantCulture);
@@ -280,19 +280,6 @@ public class MovieProvider :
         var result = new MetadataResult<Movie>();
         result.HasMetadata = false;
 
-        // Use Year from MovieInfo if available, otherwise extract from Path
-        int? year = info.Year ?? ExtractYearFromPath(info.Path);
-
-        // Build query string including year if available
-        string queryString = year.HasValue
-            ? $"{info.Name} ({year.Value})"
-            : info.Name;
-
-        _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
-
-        // Get user metadata language
-        string metadataLanguage = info.MetadataLanguage ?? "en";
-
         // Check plugin configuration exists
         if (Plugin.Instance?.Configuration == null)
         {
@@ -301,18 +288,37 @@ public class MovieProvider :
         }
 
         var config = Plugin.Instance.Configuration;
+        var url = string.Empty;
 
-        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
-        _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+        // Get user metadata language
+        string metadataLanguage = info.MetadataLanguage ?? "en";
 
-        var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
-        if (searchResults == null || searchResults.Count == 0)
+        // User selected title from the search feature in Jellyfin
+        info.ProviderIds.TryGetValue("TUIMDB", out var movieUid);
+        if (string.IsNullOrEmpty(movieUid))
         {
-            _logger.LogDebug("TUIMDB Search: No results found.");
-            return result;
-        }
+            // Use Year from MovieInfo if available, otherwise extract from Path
+            int? year = info.Year ?? ExtractYearFromPath(info.Path);
 
-        var movieUid = searchResults[0].Uid;
+            // Build query string including year if available
+            string queryString = year.HasValue
+                ? $"{info.Name} ({year.Value})"
+                : info.Name;
+
+            _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
+
+            url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
+            _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+
+            var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+            if (searchResults == null || searchResults.Count == 0)
+            {
+                _logger.LogDebug("TUIMDB Search: No results found.");
+                return result;
+            }
+
+            movieUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
+        }
 
         url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}";
         _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
@@ -329,7 +335,7 @@ public class MovieProvider :
             JsonSerializer.Serialize(movieInfo, _jsonOptions));
 
         var movie = new Movie();
-        movie.SetProviderId("TUIMDB", movieUid.ToString(CultureInfo.InvariantCulture));
+        movie.SetProviderId("TUIMDB", movieUid);
 
         movie.Name = movieInfo.Title;
         movie.Overview = movieInfo.Overview;
@@ -364,6 +370,8 @@ public class MovieProvider :
                 {
                     personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
                 }
+
+                personInfo.SetProviderId("TUIMDB", actor.PersonId.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
             }
