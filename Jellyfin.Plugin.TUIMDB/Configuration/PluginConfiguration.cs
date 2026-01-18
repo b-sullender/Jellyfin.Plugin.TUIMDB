@@ -41,6 +41,21 @@ public class PluginConfiguration : BasePluginConfiguration
     public string PeopleImagesUrl { get; set; } = "https://tuimdb.com/people/images";
 
     /// <summary>
+    /// Gets or sets the URL where series posters are hosted.
+    /// </summary>
+    public string SeriesPostersUrl { get; set; } = "https://tuimdb.com/series/posters";
+
+    /// <summary>
+    /// Gets or sets the URL where series backdrops are hosted.
+    /// </summary>
+    public string SeriesBackdropsUrl { get; set; } = "https://tuimdb.com/series/backdrops";
+
+    /// <summary>
+    /// Gets or sets the URL where series logos are hosted.
+    /// </summary>
+    public string SeriesLogosUrl { get; set; } = "https://tuimdb.com/series/logos";
+
+    /// <summary>
     /// Gets or sets the API key.
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;

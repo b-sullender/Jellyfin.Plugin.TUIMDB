@@ -3,24 +3,24 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.TUIMDB.Api.Models;
 
 /// <summary>
-/// Represents a movie search result returned by the TUIMDB API.
+/// Represents a series search result returned by the TUIMDB API.
 /// </summary>
-public class TuimdbMovieSearchResult
+public class TuimdbSeriesSearchResult
 {
     /// <summary>
-    /// Gets or sets the unique identifier of the movie.
+    /// Gets or sets the unique identifier of the series.
     /// </summary>
     [JsonPropertyName("UID")]
     public int Uid { get; set; }
 
     /// <summary>
-    /// Gets or sets the original language code of the movie.
+    /// Gets or sets the original language code of the series.
     /// </summary>
     [JsonPropertyName("Original Language")]
     public string OriginalLanguage { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the year the movie was released.
+    /// Gets or sets the year the series was released.
     /// </summary>
     [JsonPropertyName("Release Year")]
     public int? ReleaseYear { get; set; }
@@ -32,13 +32,7 @@ public class TuimdbMovieSearchResult
     public int? Adult { get; set; }
 
     /// <summary>
-    /// Gets or sets the runtime of the movie in minutes.
-    /// </summary>
-    [JsonPropertyName("Runtime")]
-    public int? Runtime { get; set; }
-
-    /// <summary>
-    /// Gets or sets the movie title.
+    /// Gets or sets the series title.
     /// </summary>
     [JsonPropertyName("Title")]
     public string Title { get; set; } = string.Empty;
@@ -50,8 +44,8 @@ public class TuimdbMovieSearchResult
     public int MatchScore { get; set; }
 
     /// <summary>
-    /// Gets or sets the primary poster of the movie.
+    /// Gets or sets the primary poster of the series.
     /// </summary>
     [JsonPropertyName("Primary Poster")]
-    public TuimdbMoviePoster? PrimaryPoster { get; set; }
+    public TuimdbSeriesPoster? PrimaryPoster { get; set; }
 }
