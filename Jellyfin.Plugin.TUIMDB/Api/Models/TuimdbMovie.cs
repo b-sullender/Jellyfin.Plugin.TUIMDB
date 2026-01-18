@@ -108,4 +108,11 @@ public class TuimdbMovie
     /// </summary>
     [JsonPropertyName("Primary Logo")]
     public TuimdbMovieLogo? PrimaryLogo { get; set; }
+
+    /// <summary>
+    /// Gets the list of Logos for the movie.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Cast")]
+    public Collection<TuimdbCastMember> Cast { get; private set; } = new();
 }

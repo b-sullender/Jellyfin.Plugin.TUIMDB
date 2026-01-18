@@ -35,19 +35,19 @@ namespace Jellyfin.Plugin.TUIMDB.Api.Models
         /// Gets or sets the order of the poster.
         /// </summary>
         [JsonPropertyName("Order")]
-        public int Order { get; set; }
+        public int? Order { get; set; }
 
         /// <summary>
         /// Gets or sets the width of the poster in pixels.
         /// </summary>
         [JsonPropertyName("Width")]
-        public int Width { get; set; }
+        public int? Width { get; set; }
 
         /// <summary>
         /// Gets or sets the height of the poster in pixels.
         /// </summary>
         [JsonPropertyName("Height")]
-        public int Height { get; set; }
+        public int? Height { get; set; }
 
         /// <summary>
         /// Gets or sets the MD5 hash of the poster file.
@@ -77,6 +77,6 @@ namespace Jellyfin.Plugin.TUIMDB.Api.Models
         /// Gets or sets the last updated timestamp of the poster in the TUIMDB system.
         /// </summary>
         [JsonPropertyName("Updated At")]
-        public string UpdatedAt { get; set; } = string.Empty;
+        public string? UpdatedAt { get; set; } = string.Empty;
     }
 }

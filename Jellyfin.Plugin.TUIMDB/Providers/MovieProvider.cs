@@ -6,8 +6,12 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
+using Jellyfin.Extensions;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
@@ -337,18 +341,33 @@ public class MovieProvider :
             _logger.LogDebug("Added genre: {Genre}", genre.Name);
         }
 
-        if (movieInfo.PrimaryPoster != null)
-        {
-            result.RemoteImages.Add((
-                $"{config.MoviePostersUrl}/{movieInfo.PrimaryPoster.Name}",
-                ImageType.Primary
-            ));
-        }
+        movie.OfficialRating = movieInfo.ContentRating;
 
         result.HasMetadata = true;
         result.Provider = "TUIMDB";
         result.ResultLanguage = movieInfo.LanguageCode;
         result.Item = movie;
+
+        if (movieInfo.Cast is not null && movieInfo.Cast.Count != 0)
+        {
+            foreach (var actor in movieInfo.Cast)
+            {
+                var personInfo = new PersonInfo
+                {
+                    Name = actor.Name,
+                    Role = actor.Character,
+                    Type = PersonKind.Actor,
+                    SortOrder = actor.Order
+                };
+
+                if (actor.PrimaryImage is not null)
+                {
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
+                }
+
+                result.AddPerson(personInfo);
+            }
+        }
 
         _logger.LogDebug(
             "TUIMDB GetMetadata Movie Class dump: {MetadataJson}",

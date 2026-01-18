@@ -36,6 +36,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public string MovieLogosUrl { get; set; } = "https://tuimdb.com/movies/logos";
 
     /// <summary>
+    /// Gets or sets the URL where people images are hosted.
+    /// </summary>
+    public string PeopleImagesUrl { get; set; } = "https://tuimdb.com/people/images";
+
+    /// <summary>
     /// Gets or sets the API key.
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;
