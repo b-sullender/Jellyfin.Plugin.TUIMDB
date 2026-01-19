@@ -56,6 +56,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public string SeriesLogosUrl { get; set; } = "https://tuimdb.com/series/logos";
 
     /// <summary>
+    /// Gets or sets the URL where season posters are hosted.
+    /// </summary>
+    public string SeasonPostersUrl { get; set; } = "https://tuimdb.com/series/season-posters";
+
+    /// <summary>
     /// Gets or sets the API key.
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;

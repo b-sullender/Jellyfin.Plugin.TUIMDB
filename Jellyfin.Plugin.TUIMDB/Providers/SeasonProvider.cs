@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Extensions;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -210,34 +212,47 @@ public class SeasonProvider :
         // Get user metadata language
         string metadataLanguage = info.MetadataLanguage ?? "en";
 
-        // User selected title from the search feature in Jellyfin
+        // Get series UID and season number
         info.SeriesProviderIds.TryGetValue("TUIMDB", out var seriesUid);
-        if (string.IsNullOrEmpty(seriesUid))
-        {
-            _logger.LogDebug("TUIMDB Season GetMetadata: No series UID");
-        }
-        else
-        {
-            _logger.LogDebug("TUIMDB Season GetMetadata: get series info for uid: {SeriesUid}", seriesUid);
-        }
-
-        var seasonNumber = info.IndexNumber;
-        if (!seasonNumber.HasValue)
-        {
-            _logger.LogDebug("TUIMDB Season GetMetadata: No season index number");
-        }
-        else
-        {
-            _logger.LogDebug("TUIMDB Season GetMetadata: get season info for index #{SeasonNumber}", seasonNumber);
-        }
-
         info.SeriesProviderIds.TryGetValue("TUIMDB_EpisodeOrder", out var episodeOrder);
-        _logger.LogDebug("TUIMDB Episode order: {EpisodeOrder}", episodeOrder);
-
         info.SeriesProviderIds.TryGetValue("TUIMDB_EpisodeOrderUid", out var episodeOrderUid);
-        _logger.LogDebug("TUIMDB Episode order UID: {EpisodeOrderUid}", episodeOrderUid);
+        var seasonNumber = info.IndexNumber;
 
-        await Task.CompletedTask.ConfigureAwait(false);
+        _logger.LogDebug("TUIMDB Season GetMetadata: Series UID: {SeriesUid}", seriesUid);
+        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order: {EpisodeOrder}", episodeOrder);
+        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order UID: {EpisodeOrderUid}", episodeOrderUid);
+        _logger.LogDebug("TUIMDB Season GetMetadata: Season number: {SeasonNumber}", seasonNumber);
+
+        if (string.IsNullOrEmpty(seriesUid) || string.IsNullOrEmpty(episodeOrderUid) || !seasonNumber.HasValue)
+        {
+            _logger.LogDebug("TUIMDB Season GetMetadata: Missing series UID, episode order UID, or season number");
+            return result;
+        }
+
+        url = $"{config.ApiBaseUrl}/series/order/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}";
+        _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+
+        var seriesSeasons = await GetFromApiAsync<List<TuimdbSeason>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        if (seriesSeasons == null || seriesSeasons.Count == 0)
+        {
+            _logger.LogDebug("TUIMDB: Failed to get season info.");
+            return result;
+        }
+
+        var seasonInfo = seriesSeasons[0];
+
+        _logger.LogDebug(
+            "TUIMDB GetMetadata Season Info dump: {MetadataJson}",
+            JsonSerializer.Serialize(seasonInfo, _jsonOptions));
+
+        result.HasMetadata = true;
+        result.Item = new Season
+        {
+            IndexNumber = seasonNumber,
+            Name = seasonInfo.Name
+        };
+
+        result.Item.SetProviderId("TUIMDB", seasonInfo.Uid.ToString(CultureInfo.InvariantCulture));
 
         return result;
     }

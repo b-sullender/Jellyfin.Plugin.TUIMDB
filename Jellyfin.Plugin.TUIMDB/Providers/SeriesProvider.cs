@@ -368,12 +368,12 @@ public class SeriesProvider :
             _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
 
             url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}";
-            _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+            _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
 
             var searchResults = await GetFromApiAsync<List<TuimdbSeriesSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
             if (searchResults == null || searchResults.Count == 0)
             {
-                _logger.LogDebug("TUIMDB Search: No results found.");
+                _logger.LogDebug("TUIMDB Series Search: No results found.");
                 return result;
             }
 
@@ -381,7 +381,7 @@ public class SeriesProvider :
         }
 
         url = $"{config.ApiBaseUrl}/series/get/?uid={seriesUid}&language={metadataLanguage}";
-        _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+        _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
 
         var seriesInfo = await GetFromApiAsync<TuimdbSeries>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
         if (seriesInfo == null)
