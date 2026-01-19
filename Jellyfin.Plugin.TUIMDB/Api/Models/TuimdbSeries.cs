@@ -96,4 +96,11 @@ public class TuimdbSeries
     /// </summary>
     [JsonPropertyName("Primary Logo")]
     public TuimdbSeriesLogo? PrimaryLogo { get; set; }
+
+    /// <summary>
+    /// Gets the list of season/episode orders for the series.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Order")]
+    public Collection<TuimdbSeriesOrder> Order { get; private set; } = new();
 }

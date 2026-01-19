@@ -297,7 +297,7 @@ public class MovieProvider :
         info.ProviderIds.TryGetValue("TUIMDB", out var movieUid);
         if (string.IsNullOrEmpty(movieUid))
         {
-            // Use Year from MovieInfo if available, otherwise extract from Path
+            // Prefer MovieInfo.Year, otherwise parsed year
             int? year = info.Year ?? ExtractYearFromPath(info.Path);
 
             // Build query string including year if available

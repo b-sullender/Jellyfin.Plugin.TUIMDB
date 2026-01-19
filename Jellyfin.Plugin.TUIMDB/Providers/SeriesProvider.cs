@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
@@ -93,32 +94,76 @@ public class SeriesProvider :
     }
 
     /// <summary>
-    /// Attempts to extract a 4-digit year from a file path or filename.
-    /// Looks for a year enclosed in parentheses at the end of the filename, e.g., "Title (1999).mp4".
-    /// Returns the year as an <see cref="int"/> if found; otherwise, returns null.
+    /// Parses a Jellyfin-style series name and extracts:
+    /// - Title (always returned)
+    /// - Year (optional, from parentheses)
+    /// - Metadata provider IDs (optional, from square brackets)
+    /// - Episode order (optional, from curly braces)
+    /// Example:
+    /// "Friends (1994) [TUIMDB=1] {Standard Order}".
     /// </summary>
-    /// <param name="path">The full path or filename of the file.</param>
-    /// <returns>The extracted year, or null if no valid year is found.</returns>
-    private static int? ExtractYearFromPath(string? path)
+    /// <param name="path">Full path or filename.</param>
+    /// <returns>A <see cref="SeriesNameInfo"/> containing extracted values.</returns>
+    private static SeriesNameInfo ParseSeriesName(string? path)
     {
-        if (string.IsNullOrEmpty(path))
+        if (string.IsNullOrWhiteSpace(path))
         {
-            return null;
+            return new SeriesNameInfo(
+                Title: string.Empty,
+                Year: null,
+                ProviderIds: new Dictionary<string, string>(),
+                EpisodeOrder: null);
         }
 
         string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
-        int start = fileName.LastIndexOf('(');
-        int end = fileName.LastIndexOf(')');
-        if (start >= 0 && end > start)
+
+        int? year = null;
+        string? episodeOrder = null;
+        var providerIds = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        // --- Extract year (parentheses) ---
+        var yearMatch = Regex.Match(
+            fileName,
+            @"\((\d{4})\)");
+
+        if (yearMatch.Success && int.TryParse(yearMatch.Groups[1].Value, out int parsedYear))
         {
-            string inside = fileName.Substring(start + 1, end - start - 1);
-            if (int.TryParse(inside, out int year))
-            {
-                return year;
-            }
+            year = parsedYear;
+            fileName = fileName.Replace(yearMatch.Value, string.Empty, StringComparison.Ordinal);
         }
 
-        return null;
+        // --- Extract provider IDs (square brackets) ---
+        var providerMatches = Regex.Matches(
+            fileName,
+            @"\[(?<key>[^\]=]+)=(?<value>[^\]]+)\]");
+
+        foreach (Match match in providerMatches)
+        {
+            providerIds[match.Groups["key"].Value.Trim()] =
+                match.Groups["value"].Value.Trim();
+
+            fileName = fileName.Replace(match.Value, string.Empty, StringComparison.Ordinal);
+        }
+
+        // --- Extract episode order (curly braces) ---
+        var orderMatch = Regex.Match(
+            fileName,
+            @"\{([^}]+)\}");
+
+        if (orderMatch.Success)
+        {
+            episodeOrder = orderMatch.Groups[1].Value.Trim();
+            fileName = fileName.Replace(orderMatch.Value, string.Empty, StringComparison.Ordinal);
+        }
+
+        // --- Remaining text is the title ---
+        string title = fileName.Trim();
+
+        return new SeriesNameInfo(
+            Title: title,
+            Year: year,
+            ProviderIds: providerIds,
+            EpisodeOrder: episodeOrder);
     }
 
     /// <summary>
@@ -203,13 +248,21 @@ public class SeriesProvider :
             "TUIMDB GetSearchResults SeriesInfo dump: {SeriesInfoJson}",
             JsonSerializer.Serialize(searchInfo, _jsonOptions));
 
-        // Use Year from SeriesInfo if available, otherwise extract from Path
-        int? year = searchInfo.Year ?? ExtractYearFromPath(searchInfo.Path);
+        // Parse series name (title, year, provider ids, episode order)
+        var parsedName = ParseSeriesName(searchInfo.Path);
+
+        // Log parsed components for debugging
+        _logger.LogDebug(
+            "TUIMDB Parsed series name info (search): {ParsedSeriesNameJson}",
+            JsonSerializer.Serialize(parsedName, _jsonOptions));
+
+        // Prefer SeriesInfo.Year, otherwise parsed year
+        int? year = searchInfo.Year ?? parsedName.Year;
 
         // Build query string including year if available
         string queryString = year.HasValue
-            ? $"{searchInfo.Name} ({year.Value})"
-            : searchInfo.Name;
+            ? $"{parsedName.Title} ({year.Value})"
+            : parsedName.Title;
 
         _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
 
@@ -292,17 +345,25 @@ public class SeriesProvider :
         // Get user metadata language
         string metadataLanguage = info.MetadataLanguage ?? "en";
 
+        // Parse series name (title, year, provider ids, episode order)
+        var parsedName = ParseSeriesName(info.Path);
+
+        // Log parsed components for debugging
+        _logger.LogDebug(
+            "TUIMDB Parsed series name info: {ParsedSeriesNameJson}",
+            JsonSerializer.Serialize(parsedName, _jsonOptions));
+
         // User selected title from the search feature in Jellyfin
         info.ProviderIds.TryGetValue("TUIMDB", out var seriesUid);
         if (string.IsNullOrEmpty(seriesUid))
         {
-            // Use Year from SeriesInfo if available, otherwise extract from Path
-            int? year = info.Year ?? ExtractYearFromPath(info.Path);
+            // Prefer SeriesInfo.Year, otherwise parsed year
+            int? year = info.Year ?? parsedName.Year;
 
             // Build query string including year if available
             string queryString = year.HasValue
-                ? $"{info.Name} ({year.Value})"
-                : info.Name;
+                ? $"{parsedName.Title} ({year.Value})"
+                : parsedName.Title;
 
             _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
 
@@ -346,6 +407,37 @@ public class SeriesProvider :
             _logger.LogDebug("Added genre: {Genre}", genre.Name);
         }
 
+        int? episodeOrderUid = null;
+
+        if (seriesInfo.Order is not null && seriesInfo.Order.Count != 0)
+        {
+            if (parsedName.EpisodeOrder is not null)
+            {
+                foreach (var order in seriesInfo.Order)
+                {
+                    if (order.Name == parsedName.EpisodeOrder)
+                    {
+                        episodeOrderUid = order.Uid;
+                    }
+                }
+            }
+
+            if (episodeOrderUid == null)
+            {
+                episodeOrderUid = seriesInfo.Order[0].Uid;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(parsedName.EpisodeOrder))
+        {
+            series.SetProviderId("TUIMDB_EpisodeOrder", parsedName.EpisodeOrder);
+        }
+
+        if (episodeOrderUid.HasValue)
+        {
+            series.SetProviderId("TUIMDB_EpisodeOrderUid", episodeOrderUid.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
         result.HasMetadata = true;
         result.Provider = "TUIMDB";
         result.ResultLanguage = seriesInfo.LanguageCode;
@@ -361,4 +453,17 @@ public class SeriesProvider :
 
         return result;
     }
+
+    /// <summary>
+    /// Represents metadata extracted from a Jellyfin-style series name,
+    /// including the normalized title and optional identifying information
+    /// such as release year, metadata provider IDs, and plugin-defined
+    /// episode ordering hints.
+    /// </summary>
+    private sealed record SeriesNameInfo(
+        string Title,
+        int? Year,
+        Dictionary<string, string> ProviderIds,
+        string? EpisodeOrder
+    );
 }
