@@ -17,11 +17,11 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.TUIMDB.Providers
 {
     /// <summary>
-    /// Season image provider powered by TUIMDB.
+    /// Episode image provider powered by TUIMDB.
     /// </summary>
-    public class SeasonImageProvider : IRemoteImageProvider, IHasOrder
+    public class EpisodeImageProvider : IRemoteImageProvider, IHasOrder
     {
-        private readonly ILogger<SeasonImageProvider> _logger;
+        private readonly ILogger<EpisodeImageProvider> _logger;
 
         private static readonly HttpClient _httpClient = new HttpClient
         {
@@ -40,13 +40,13 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SeasonImageProvider"/> class.
+        /// Initializes a new instance of the <see cref="EpisodeImageProvider"/> class.
         /// </summary>
         /// <param name="logger">Logger instance for this provider.</param>
-        public SeasonImageProvider(ILogger<SeasonImageProvider> logger)
+        public EpisodeImageProvider(ILogger<EpisodeImageProvider> logger)
         {
             _logger = logger;
-            _logger.LogInformation("TUIMDB SeasonImageProvider constructed");
+            _logger.LogInformation("TUIMDB EpisodeImageProvider constructed");
         }
 
         /// <inheritdoc />
@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         /// <inheritdoc />
         public bool Supports(BaseItem item)
         {
-            return item is Season;
+            return item is Episode;
         }
 
         /// <inheritdoc />
@@ -72,8 +72,8 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             BaseItem item,
             CancellationToken cancellationToken)
         {
-            var season = (Season)item;
-            var series = season?.Series;
+            var episode = (Episode)item;
+            var series = episode?.Series;
 
             if (Plugin.Instance?.Configuration == null)
             {
@@ -87,22 +87,22 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             if (string.IsNullOrWhiteSpace(seriesUidString) ||
                 !int.TryParse(seriesUidString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seriesUid))
             {
-                _logger.LogDebug("TUIMDB Season ImageProvider: No series TUIMDB provider ID found");
+                _logger.LogDebug("TUIMDB Episode ImageProvider: No series TUIMDB provider ID found");
                 return Array.Empty<RemoteImageInfo>();
             }
 
-            var seasonUidString = season?.GetProviderId("TUIMDB");
-            if (string.IsNullOrWhiteSpace(seasonUidString) ||
-                !int.TryParse(seasonUidString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seasonUid))
+            var episodeUidString = episode?.GetProviderId("TUIMDB");
+            if (string.IsNullOrWhiteSpace(episodeUidString) ||
+                !int.TryParse(episodeUidString, NumberStyles.Integer, CultureInfo.InvariantCulture, out var episodeUid))
             {
-                _logger.LogDebug("TUIMDB Season ImageProvider: No season TUIMDB provider ID found");
+                _logger.LogDebug("TUIMDB Episode ImageProvider: No episode TUIMDB provider ID found");
                 return Array.Empty<RemoteImageInfo>();
             }
 
             var language = item.GetPreferredMetadataLanguage() ?? "en";
 
-            var url = $"{config.ApiBaseUrl}/series/season/posters/?seriesId={seriesUid}&seasonId={seasonUid}&language={language}";
-            _logger.LogDebug("TUIMDB Season ImageProvider: Fetching posters from {Url}", url);
+            var url = $"{config.ApiBaseUrl}/series/episode/backdrops/?seriesId={seriesUid}&episodeId={episodeUid}&language={language}";
+            _logger.LogDebug("TUIMDB Episode ImageProvider: Fetching backdrops from {Url}", url);
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrWhiteSpace(config.ApiKey))
@@ -116,73 +116,43 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError(
-                        "TUIMDB Season ImageProvider: Failed to fetch season posters. Status: {Status}",
+                        "TUIMDB Episode ImageProvider: Failed to fetch episode backdrops. Status: {Status}",
                         response.StatusCode);
                     return Array.Empty<RemoteImageInfo>();
                 }
 
-                var seasonImages = await response.Content
-                    .ReadFromJsonAsync<TuimdbSeasonImages>(_jsonOptions, cancellationToken)
+                var episodeImages = await response.Content
+                    .ReadFromJsonAsync<TuimdbEpisodeImages>(_jsonOptions, cancellationToken)
                     .ConfigureAwait(false);
 
-                if (seasonImages == null)
+                if (episodeImages == null)
                 {
                     return Array.Empty<RemoteImageInfo>();
                 }
 
                 var images = new List<RemoteImageInfo>();
 
-                // Primary poster
-                if (seasonImages.PrimaryPoster != null)
+                // Primary backdrop
+                if (episodeImages.PrimaryBackdrop != null)
                 {
                     images.Add(new RemoteImageInfo
                     {
-                        Url = $"{config.SeasonPostersUrl}/{seasonImages.PrimaryPoster.Name}",
+                        Url = $"{config.EpisodeBackdropsUrl}/{episodeImages.PrimaryBackdrop.Name}",
                         Type = ImageType.Primary,
                         ProviderName = Name,
                         Language = language
                     });
                 }
 
-                // Additional posters
-                if (seasonImages.Posters != null)
+                // Additional backdrops
+                if (episodeImages.Backdrops != null)
                 {
-                    foreach (var poster in seasonImages.Posters)
+                    foreach (var backdrop in episodeImages.Backdrops)
                     {
                         images.Add(new RemoteImageInfo
                         {
-                            Url = $"{config.SeasonPostersUrl}/{poster.Name}",
+                            Url = $"{config.EpisodeBackdropsUrl}/{backdrop.Name}",
                             Type = ImageType.Primary,
-                            ProviderName = Name,
-                            Language = language
-                        });
-                    }
-                }
-
-                // Backdrops
-                if (seasonImages.Backdrops != null)
-                {
-                    foreach (var backdrop in seasonImages.Backdrops)
-                    {
-                        images.Add(new RemoteImageInfo
-                        {
-                            Url = $"{config.SeasonBackdropsUrl}/{backdrop.Name}",
-                            Type = ImageType.Backdrop,
-                            ProviderName = Name,
-                            Language = language
-                        });
-                    }
-                }
-
-                // Logos
-                if (seasonImages.Logos != null)
-                {
-                    foreach (var logo in seasonImages.Logos)
-                    {
-                        images.Add(new RemoteImageInfo
-                        {
-                            Url = $"{config.SeasonLogosUrl}/{logo.Name}",
-                            Type = ImageType.Logo,
                             ProviderName = Name,
                             Language = language
                         });

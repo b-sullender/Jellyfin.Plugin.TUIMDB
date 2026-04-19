@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Extensions;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
-using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -22,16 +21,16 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.TUIMDB.Providers;
 
 /// <summary>
-/// Provides season metadata and search results from TUIMDB.
+/// Provides episode metadata and search results from TUIMDB.
 /// </summary>
-public class SeasonProvider :
-    IRemoteMetadataProvider<Season, SeasonInfo>,
+public class EpisodeProvider :
+    IRemoteMetadataProvider<Episode, EpisodeInfo>,
     IHasOrder
 {
     /// <summary>
     /// The logger for this provider.
     /// </summary>
-    private readonly ILogger<SeasonProvider> _logger;
+    private readonly ILogger<EpisodeProvider> _logger;
 
     /// <summary>
     /// The HTTP client used to call TUIMDB API.
@@ -58,13 +57,13 @@ public class SeasonProvider :
     };
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SeasonProvider"/> class.
+    /// Initializes a new instance of the <see cref="EpisodeProvider"/> class.
     /// </summary>
     /// <param name="logger">Logger instance for this provider.</param>
-    public SeasonProvider(ILogger<SeasonProvider> logger)
+    public EpisodeProvider(ILogger<EpisodeProvider> logger)
     {
         _logger = logger;
-        _logger.LogInformation("TUIMDB SeasonProvider constructed");
+        _logger.LogInformation("TUIMDB EpisodeProvider constructed");
     }
 
     /// <summary>
@@ -163,46 +162,46 @@ public class SeasonProvider :
     }
 
     /// <summary>
-    /// Gets search results for a given <see cref="SeasonInfo"/>.
+    /// Gets search results for a given <see cref="EpisodeInfo"/>.
     /// </summary>
-    /// <param name="searchInfo">The season search information.</param>
+    /// <param name="searchInfo">The episode search information.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A collection of <see cref="RemoteSearchResult"/>.</returns>
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(
-        SeasonInfo searchInfo,
+        EpisodeInfo searchInfo,
         CancellationToken cancellationToken)
     {
         _logger.LogDebug(
-            "TUIMDB GetSearchResults SeasonInfo dump: {SeasonInfoJson}",
+            "TUIMDB GetSearchResults EpisodeInfo dump: {EpisodeInfoJson}",
             JsonSerializer.Serialize(searchInfo, _jsonOptions));
 
-        var results = new List<RemoteSearchResult>();
+        // TODO: do episode search...
         await Task.CompletedTask.ConfigureAwait(false);
 
-        return results;
+        return Array.Empty<RemoteSearchResult>();
     }
 
     /// <summary>
-    /// Gets metadata for a season given its <see cref="SeasonInfo"/>.
+    /// Gets metadata for a episode given its <see cref="EpisodeInfo"/>.
     /// </summary>
-    /// <param name="info">The season information.</param>
+    /// <param name="info">The episode information.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A <see cref="MetadataResult{Season}"/> containing metadata.</returns>
-    public async Task<MetadataResult<Season>> GetMetadata(
-        SeasonInfo info,
+    /// <returns>A <see cref="MetadataResult{Episode}"/> containing metadata.</returns>
+    public async Task<MetadataResult<Episode>> GetMetadata(
+        EpisodeInfo info,
         CancellationToken cancellationToken)
     {
         _logger.LogDebug(
-            "TUIMDB GetMetadata SeasonInfo dump: {SeasonInfoJson}",
+            "TUIMDB GetMetadata EpisodeInfo dump: {EpisodeInfoJson}",
             JsonSerializer.Serialize(info, _jsonOptions));
 
-        var result = new MetadataResult<Season>();
+        var result = new MetadataResult<Episode>();
         result.HasMetadata = false;
 
         // Check plugin configuration exists
         if (Plugin.Instance?.Configuration == null)
         {
-            _logger.LogError("TUIMDB Season GetMetadata: Plugin configuration is null");
+            _logger.LogError("TUIMDB Episode GetMetadata: Plugin configuration is null");
             return result;
         }
 
@@ -212,48 +211,46 @@ public class SeasonProvider :
         // Get user metadata language
         string metadataLanguage = info.MetadataLanguage ?? "en";
 
-        // Get series UID and season number
+        // Get series UID and season UID
         info.SeriesProviderIds.TryGetValue("TUIMDB", out var seriesUid);
-        info.SeriesProviderIds.TryGetValue("TUIMDB_EpisodeOrder", out var episodeOrder);
-        info.SeriesProviderIds.TryGetValue("TUIMDB_EpisodeOrderUid", out var episodeOrderUid);
-        var seasonNumber = info.IndexNumber;
+        info.SeasonProviderIds.TryGetValue("TUIMDB", out var seasonUid);
+        var episodeNumber = info.IndexNumber;
 
-        _logger.LogDebug("TUIMDB Season GetMetadata: Series UID: {SeriesUid}", seriesUid);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order: {EpisodeOrder}", episodeOrder);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order UID: {EpisodeOrderUid}", episodeOrderUid);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Season number: {SeasonNumber}", seasonNumber);
+        _logger.LogDebug("TUIMDB Episode GetMetadata: Series UID: {SeriesUid}", seriesUid);
+        _logger.LogDebug("TUIMDB Episode GetMetadata: Season UID: {SeasonUid}", seasonUid);
+        _logger.LogDebug("TUIMDB Episode GetMetadata: Episode number: {EpisodeNumber}", episodeNumber);
 
-        if (string.IsNullOrEmpty(seriesUid) || string.IsNullOrEmpty(episodeOrderUid) || !seasonNumber.HasValue)
+        if (string.IsNullOrEmpty(seriesUid) || string.IsNullOrEmpty(seasonUid) || !episodeNumber.HasValue)
         {
-            _logger.LogDebug("TUIMDB Season GetMetadata: Missing series UID, episode order UID, or season number");
+            _logger.LogDebug("TUIMDB Episode GetMetadata: Missing series UID, season UID, or episode number");
             return result;
         }
 
-        url = $"{config.ApiBaseUrl}/series/order/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}";
+        url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}";
         _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
 
-        var seriesSeasons = await GetFromApiAsync<List<TuimdbSeason>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
-        if (seriesSeasons == null || seriesSeasons.Count == 0)
+        var episodes = await GetFromApiAsync<List<TuimdbEpisode>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        if (episodes == null || episodes.Count == 0)
         {
-            _logger.LogDebug("TUIMDB: Failed to get season info.");
+            _logger.LogDebug("TUIMDB: Failed to get episode info.");
             return result;
         }
 
-        var seasonInfo = seriesSeasons[0];
+        var episodeInfo = episodes[0];
 
         _logger.LogDebug(
-            "TUIMDB GetMetadata Season Info dump: {MetadataJson}",
-            JsonSerializer.Serialize(seasonInfo, _jsonOptions));
+            "TUIMDB GetMetadata Episode Info dump: {MetadataJson}",
+            JsonSerializer.Serialize(episodeInfo, _jsonOptions));
 
         result.HasMetadata = true;
-        result.Item = new Season
+        result.Item = new Episode
         {
-            IndexNumber = seasonNumber,
-            Name = seasonInfo.Name,
-            Overview = seasonInfo.Overview
+            IndexNumber = episodeNumber,
+            Name = episodeInfo.Name,
+            Overview = episodeInfo.Overview
         };
 
-        result.Item.SetProviderId("TUIMDB", seasonInfo.Uid.ToString(CultureInfo.InvariantCulture));
+        result.Item.SetProviderId("TUIMDB", episodeInfo.Uid.ToString(CultureInfo.InvariantCulture));
 
         return result;
     }

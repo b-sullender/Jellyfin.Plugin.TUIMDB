@@ -5,12 +5,12 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.TUIMDB.Api.Models;
 
 /// <summary>
-/// Represents a season returned by the TUIMDB API.
+/// Represents a episode returned by the TUIMDB API.
 /// </summary>
-public class TuimdbSeason
+public class TuimdbEpisode
 {
     /// <summary>
-    /// Gets or sets the unique identifier of the season.
+    /// Gets or sets the unique identifier of the episode.
     /// </summary>
     [JsonPropertyName("UID")]
     public int Uid { get; set; }
@@ -24,49 +24,49 @@ public class TuimdbSeason
     /// <summary>
     /// Gets or sets the unique identifier of the episode order.
     /// </summary>
-    [JsonPropertyName("Order ID")]
-    public int OrderUid { get; set; }
+    [JsonPropertyName("Runtime")]
+    public int Runtime { get; set; }
 
     /// <summary>
-    /// Gets or sets the season number.
+    /// Gets or sets the air date of the episode.
     /// </summary>
-    [JsonPropertyName("Season Number")]
-    public int SeasonNumber { get; set; }
+    [JsonPropertyName("Air Date")]
+    public string AirDate { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the season is locked.
-    /// </summary>
-    [JsonPropertyName("Locked")]
-    public int Locked { get; set; }
-
-    /// <summary>
-    /// Gets or sets the creation timestamp of the season in the TUIMDB system.
+    /// Gets or sets the creation timestamp of the episode in the TUIMDB system.
     /// </summary>
     [JsonPropertyName("Created At")]
     public string CreatedAt { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the season name.
+    /// Gets or sets the episode order number (episode number).
+    /// </summary>
+    [JsonPropertyName("Order")]
+    public int Order { get; set; }
+
+    /// <summary>
+    /// Gets or sets the episode name.
     /// </summary>
     [JsonPropertyName("Name")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the season overview.
+    /// Gets or sets the episode overview.
     /// </summary>
     [JsonPropertyName("Overview")]
     public string Overview { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets the list of posters for the season.
+    /// Gets the list of posters for the episode.
     /// </summary>
     [JsonInclude]
-    [JsonPropertyName("Posters")]
-    public Collection<TuimdbSeasonPoster> Posters { get; private set; } = new();
+    [JsonPropertyName("Backdrops")]
+    public Collection<TuimdbEpisodeBackdrop> Backdrops { get; private set; } = new();
 
     /// <summary>
     /// Gets or sets the primary poster for the season.
     /// </summary>
-    [JsonPropertyName("Primary Poster")]
-    public TuimdbSeasonPoster? PrimaryPoster { get; set; }
+    [JsonPropertyName("Primary Backdrop")]
+    public TuimdbEpisodeBackdrop? PrimaryBackdrop { get; set; }
 }

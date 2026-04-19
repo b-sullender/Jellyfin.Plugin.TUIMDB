@@ -320,7 +320,7 @@ public class MovieProvider :
             movieUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
         }
 
-        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}";
+        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true";
         _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
 
         var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);

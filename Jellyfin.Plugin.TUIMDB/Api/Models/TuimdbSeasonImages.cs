@@ -21,4 +21,30 @@ public class TuimdbSeasonImages
     /// </summary>
     [JsonPropertyName("Primary Poster")]
     public TuimdbSeasonPoster? PrimaryPoster { get; set; }
+
+    /// <summary>
+    /// Gets the list of backdrops for the season.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Backdrops")]
+    public Collection<TuimdbSeasonBackdrop> Backdrops { get; private set; } = new();
+
+    /// <summary>
+    /// Gets or sets the primary backdrop for the season.
+    /// </summary>
+    [JsonPropertyName("Primary Backdrop")]
+    public TuimdbSeasonBackdrop? PrimaryBackdrop { get; set; }
+
+    /// <summary>
+    /// Gets the list of logos for the season.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Logos")]
+    public Collection<TuimdbSeasonLogo> Logos { get; private set; } = new();
+
+    /// <summary>
+    /// Gets or sets the primary logo for the season.
+    /// </summary>
+    [JsonPropertyName("Primary Logo")]
+    public TuimdbSeasonLogo? PrimaryLogo { get; set; }
 }
