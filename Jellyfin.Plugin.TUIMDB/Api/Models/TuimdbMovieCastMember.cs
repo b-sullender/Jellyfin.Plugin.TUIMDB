@@ -5,9 +5,9 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.TUIMDB.Api.Models;
 
 /// <summary>
-/// Represents a cast member returned by the TUIMDB API.
+/// Represents a movie cast member returned by the TUIMDB API.
 /// </summary>
-public class TuimdbCastMember
+public class TuimdbMovieCastMember
 {
     /// <summary>
     /// Gets or sets the unique identifier of the cast member.

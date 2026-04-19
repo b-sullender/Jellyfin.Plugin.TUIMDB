@@ -114,5 +114,5 @@ public class TuimdbMovie
     /// </summary>
     [JsonInclude]
     [JsonPropertyName("Cast")]
-    public Collection<TuimdbCastMember> Cast { get; private set; } = new();
+    public Collection<TuimdbMovieCastMember> Cast { get; private set; } = new();
 }

@@ -226,7 +226,7 @@ public class EpisodeProvider :
             return result;
         }
 
-        url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}";
+        url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}&includeCast=true";
         _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
 
         var episodes = await GetFromApiAsync<List<TuimdbEpisode>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
@@ -249,6 +249,29 @@ public class EpisodeProvider :
             Name = episodeInfo.Name,
             Overview = episodeInfo.Overview
         };
+
+        if (episodeInfo.Cast is not null && episodeInfo.Cast.Count != 0)
+        {
+            foreach (var actor in episodeInfo.Cast)
+            {
+                var personInfo = new PersonInfo
+                {
+                    Name = actor.Name,
+                    Role = actor.Characters,
+                    Type = PersonKind.Actor,
+                    SortOrder = actor.Order
+                };
+
+                if (actor.PrimaryImage is not null)
+                {
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
+                }
+
+                personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
+
+                result.AddPerson(personInfo);
+            }
+        }
 
         result.Item.SetProviderId("TUIMDB", episodeInfo.Uid.ToString(CultureInfo.InvariantCulture));
 

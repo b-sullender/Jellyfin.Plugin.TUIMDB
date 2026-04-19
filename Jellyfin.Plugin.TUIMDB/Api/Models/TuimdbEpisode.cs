@@ -58,6 +58,13 @@ public class TuimdbEpisode
     public string Overview { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the list of cast members associated with the episode.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Cast")]
+    public Collection<TuimdbEpisodeCastMember> Cast { get; private set; } = new();
+
+    /// <summary>
     /// Gets the list of posters for the episode.
     /// </summary>
     [JsonInclude]
