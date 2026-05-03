@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.TUIMDB.Api.Models;
 
 /// <summary>
-/// Represents a episode cast member returned by the TUIMDB API.
+/// Represents an episode cast member returned by the TUIMDB API.
 /// </summary>
 public class TuimdbEpisodeCastMember
 {
@@ -19,19 +18,19 @@ public class TuimdbEpisodeCastMember
     /// Gets or sets the birthday of the person.
     /// </summary>
     [JsonPropertyName("Birthday")]
-    public string Birthday { get; set; } = string.Empty;
+    public string? Birthday { get; set; }
 
     /// <summary>
     /// Gets or sets the deathday of the person.
     /// </summary>
     [JsonPropertyName("Deathday")]
-    public string Deathday { get; set; } = string.Empty;
+    public string? Deathday { get; set; }
 
     /// <summary>
     /// Gets or sets the gender of the person.
     /// </summary>
     [JsonPropertyName("Gender")]
-    public int Gender { get; set; }
+    public int? Gender { get; set; }
 
     /// <summary>
     /// Gets or sets the original language of the person.
@@ -44,6 +43,30 @@ public class TuimdbEpisodeCastMember
     /// </summary>
     [JsonPropertyName("Added By")]
     public int AddedBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the birthday is locked.
+    /// </summary>
+    [JsonPropertyName("Birthday Locked")]
+    public int BirthdayLocked { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the deathday is locked.
+    /// </summary>
+    [JsonPropertyName("Deathday Locked")]
+    public int DeathdayLocked { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the gender is locked.
+    /// </summary>
+    [JsonPropertyName("Gender Locked")]
+    public int GenderLocked { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the language is locked.
+    /// </summary>
+    [JsonPropertyName("Language Locked")]
+    public int LanguageLocked { get; set; }
 
     /// <summary>
     /// Gets or sets the creation timestamp of the person in the TUIMDB system.
@@ -64,16 +87,10 @@ public class TuimdbEpisodeCastMember
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the place of birth of the person.
-    /// </summary>
-    [JsonPropertyName("Place of Birth")]
-    public string PlaceOfBirth { get; set; } = string.Empty;
-
-    /// <summary>
     /// Gets or sets the original name of the person.
     /// </summary>
     [JsonPropertyName("Original Name")]
-    public string OriginalName { get; set; } = string.Empty;
+    public string? OriginalName { get; set; }
 
     /// <summary>
     /// Gets or sets the primary image for the person.
@@ -89,7 +106,7 @@ public class TuimdbEpisodeCastMember
     public Collection<TuimdbEpisodeCastCredit> Credits { get; private set; } = new();
 
     /// <summary>
-    /// Gets or sets the character name.
+    /// Gets or sets the combined character names.
     /// </summary>
     [JsonPropertyName("Characters")]
     public string? Characters { get; set; }
@@ -98,5 +115,5 @@ public class TuimdbEpisodeCastMember
     /// Gets or sets the order number for the cast member.
     /// </summary>
     [JsonPropertyName("Order")]
-    public int Order { get; set; }
+    public int? Order { get; set; }
 }

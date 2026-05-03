@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 
 namespace Jellyfin.Plugin.TUIMDB.Api.Models;
@@ -31,13 +29,19 @@ public class TuimdbMovieCastMember
     /// Gets or sets the order number for the cast member.
     /// </summary>
     [JsonPropertyName("Order")]
-    public int Order { get; set; }
+    public int? Order { get; set; }
 
     /// <summary>
-    /// Gets or sets a boolean indicating if the cast member is a voice actor.
+    /// Gets or sets a value indicating whether the cast member is a voice actor.
     /// </summary>
     [JsonPropertyName("Voice Actor")]
     public int VoiceActor { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the cast member is uncredited.
+    /// </summary>
+    [JsonPropertyName("Uncredited")]
+    public int Uncredited { get; set; }
 
     /// <summary>
     /// Gets or sets the user ID of the person who added the cast member.
@@ -64,20 +68,20 @@ public class TuimdbMovieCastMember
     public string UpdatedAt { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the person name.
+    /// Gets or sets the character name.
     /// </summary>
     [JsonPropertyName("Name")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the character name.
+    /// Gets or sets the original name of the character.
     /// </summary>
-    [JsonPropertyName("Character")]
-    public string? Character { get; set; }
+    [JsonPropertyName("Original Name")]
+    public string? OriginalName { get; set; }
 
     /// <summary>
-    /// Gets or sets the primary image for the person.
+    /// Gets or sets the full person object for the cast member.
     /// </summary>
-    [JsonPropertyName("Primary Image")]
-    public TuimdbPersonImage? PrimaryImage { get; set; }
+    [JsonPropertyName("Person")]
+    public TuimdbPerson? Person { get; set; }
 }

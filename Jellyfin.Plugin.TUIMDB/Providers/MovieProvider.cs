@@ -356,22 +356,22 @@ public class MovieProvider :
 
         if (movieInfo.Cast is not null && movieInfo.Cast.Count != 0)
         {
-            foreach (var actor in movieInfo.Cast)
+            foreach (var castMember in movieInfo.Cast)
             {
                 var personInfo = new PersonInfo
                 {
-                    Name = actor.Name,
-                    Role = actor.Character,
+                    Name = castMember.Person?.Name ?? castMember.Name,
+                    Role = castMember.Name,
                     Type = PersonKind.Actor,
-                    SortOrder = actor.Order
+                    SortOrder = castMember.Order
                 };
 
-                if (actor.PrimaryImage is not null)
+                if (castMember.Person?.PrimaryImage is not null)
                 {
-                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{castMember.Person.PrimaryImage.Name}";
                 }
 
-                personInfo.SetProviderId("TUIMDB", actor.PersonId.ToString(CultureInfo.InvariantCulture));
+                personInfo.SetProviderId("TUIMDB", castMember.PersonId.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
             }
