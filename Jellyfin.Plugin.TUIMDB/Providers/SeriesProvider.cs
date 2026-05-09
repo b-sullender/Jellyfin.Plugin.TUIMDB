@@ -377,6 +377,12 @@ public class SeriesProvider :
                 return result;
             }
 
+            if (searchResults[0].MatchScore < 65)
+            {
+                _logger.LogDebug("TUIMDB Search: MatchScore less than 65% - Returning empty metadata.");
+                return result;
+            }
+
             seriesUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
         }
 

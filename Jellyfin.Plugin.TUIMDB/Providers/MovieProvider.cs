@@ -313,7 +313,13 @@ public class MovieProvider :
             var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
             if (searchResults == null || searchResults.Count == 0)
             {
-                _logger.LogDebug("TUIMDB Search: No results found.");
+                _logger.LogDebug("TUIMDB Movie Search: No results found.");
+                return result;
+            }
+
+            if (searchResults[0].MatchScore < 65)
+            {
+                _logger.LogDebug("TUIMDB Search: MatchScore less than 65% - Returning empty metadata.");
                 return result;
             }
 
