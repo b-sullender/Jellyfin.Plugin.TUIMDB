@@ -413,6 +413,8 @@ public class SeriesProvider :
             _logger.LogDebug("Added genre: {Genre}", genre.Name);
         }
 
+        series.OfficialRating = seriesInfo.ContentRating;
+
         int? episodeOrderUid = null;
 
         if (seriesInfo.Order is not null && seriesInfo.Order.Count != 0)

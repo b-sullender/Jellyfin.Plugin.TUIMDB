@@ -251,11 +251,24 @@ public class EpisodeProvider :
             JsonSerializer.Serialize(episodeInfo, _jsonOptions));
 
         result.HasMetadata = true;
+
+        DateTime? premiereDate = null;
+        if (DateTime.TryParseExact(
+            episodeInfo.AirDate,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out var parsedDate))
+        {
+            premiereDate = parsedDate;
+        }
+
         result.Item = new Episode
         {
             IndexNumber = episodeNumber,
             Name = episodeInfo.Name,
-            Overview = episodeInfo.Overview
+            Overview = episodeInfo.Overview,
+            PremiereDate = premiereDate
         };
 
         if (episodeInfo.Cast is not null && episodeInfo.Cast.Count != 0)

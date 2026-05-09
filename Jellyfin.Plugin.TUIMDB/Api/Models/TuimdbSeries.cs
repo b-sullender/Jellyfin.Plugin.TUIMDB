@@ -59,6 +59,12 @@ public class TuimdbSeries
     public Collection<TuimdbGenre> Genres { get; private set; } = new();
 
     /// <summary>
+    /// Gets or sets the content rating of the series.
+    /// </summary>
+    [JsonPropertyName("Content Rating")]
+    public string ContentRating { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets the list of posters for the series.
     /// </summary>
     [JsonInclude]
