@@ -175,10 +175,18 @@ public class EpisodeProvider :
             "TUIMDB GetSearchResults EpisodeInfo dump: {EpisodeInfoJson}",
             JsonSerializer.Serialize(searchInfo, _jsonOptions));
 
-        // TODO: do episode search...
+        var results = Array.Empty<RemoteSearchResult>();
+
+        // TODO: Implement episode search against TUIMDB API and populate results.
+
+        // NOTE: This method is not currently used by Jellyfin's standard metadata workflows
+        // for Episode items. Episode metadata is typically resolved through Series-level
+        // identification and season/episode ordering derived from library structure and
+        // provider data, rather than direct episode-level search or identify flows.
+
         await Task.CompletedTask.ConfigureAwait(false);
 
-        return Array.Empty<RemoteSearchResult>();
+        return results;
     }
 
     /// <summary>

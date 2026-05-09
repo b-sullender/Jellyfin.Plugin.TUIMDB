@@ -177,6 +177,14 @@ public class SeasonProvider :
             JsonSerializer.Serialize(searchInfo, _jsonOptions));
 
         var results = new List<RemoteSearchResult>();
+
+        // TODO: Implement season search against TUIMDB API and populate results.
+
+        // NOTE: This method is not currently used by Jellyfin's standard metadata workflows
+        // for Season items. Season metadata is typically resolved through Series-level
+        // identification and provider propagation, and this method does not appear to be
+        // invoked in normal library or identify flows.
+
         await Task.CompletedTask.ConfigureAwait(false);
 
         return results;

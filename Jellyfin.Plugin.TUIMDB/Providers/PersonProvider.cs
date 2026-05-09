@@ -159,10 +159,54 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(PersonLookupInfo searchInfo, CancellationToken cancellationToken)
         {
-            // TODO: do person search...
-            await Task.CompletedTask.ConfigureAwait(false);
+            _logger.LogDebug(
+                "TUIMDB GetSearchResults PersonLookupInfo dump: {PersonLookupInfoJson}",
+                JsonSerializer.Serialize(searchInfo, _jsonOptions));
 
-            return [];
+            // Get user metadata language
+            string metadataLanguage = searchInfo.MetadataLanguage ?? "en";
+
+            // Get person name
+            string queryString = searchInfo.Name;
+
+            // Check plugin configuration exists
+            if (Plugin.Instance?.Configuration == null)
+            {
+                _logger.LogError("TUIMDB GetMetadata: Plugin configuration is null");
+                return new List<RemoteSearchResult>();
+            }
+
+            var config = Plugin.Instance.Configuration;
+
+            var url = $"{config.ApiBaseUrl}/people/search/?queryString={Uri.EscapeDataString(queryString)}&includeImages=true&language={metadataLanguage}";
+            _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+
+            var response = await GetFromApiAsync<List<TuimdbPeopleSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+            if (response == null || response.Count == 0)
+            {
+                _logger.LogDebug("TUIMDB Search: No results found.");
+                return new List<RemoteSearchResult>();
+            }
+
+            var results = new List<RemoteSearchResult>();
+            foreach (var person in response)
+            {
+                var result = new RemoteSearchResult
+                {
+                    SearchProviderName = "TUIMDB",
+                    Name = person.Name,
+                };
+
+                if (person.PrimaryImage != null)
+                {
+                    result.ImageUrl = $"{config.PeopleImagesUrl}/low-res/w200/{person.PrimaryImage.Name}";
+                }
+
+                result.SetProviderId("TUIMDB", person.Uid.ToString(CultureInfo.InvariantCulture));
+                results.Add(result);
+            }
+
+            return results;
         }
 
         /// <inheritdoc />
