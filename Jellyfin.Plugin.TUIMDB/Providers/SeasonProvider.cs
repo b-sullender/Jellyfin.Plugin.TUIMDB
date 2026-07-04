@@ -42,7 +42,7 @@ public class SeasonProvider :
         {
             UserAgent =
             {
-                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.0.0.0")
+                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
             }
         }
     };

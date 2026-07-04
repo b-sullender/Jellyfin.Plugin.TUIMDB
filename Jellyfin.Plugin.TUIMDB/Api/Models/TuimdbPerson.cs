@@ -86,6 +86,18 @@ namespace Jellyfin.Plugin.TUIMDB.Api.Models
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the unique identifier of the name.
+        /// </summary>
+        [JsonPropertyName("Name ID")]
+        public int NameId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the original name of the person.
+        /// </summary>
+        [JsonPropertyName("Original Name")]
+        public string? OriginalName { get; set; }
+
+        /// <summary>
         /// Gets or sets the place of birth of the person.
         /// </summary>
         [JsonPropertyName("Place of Birth")]
@@ -96,12 +108,6 @@ namespace Jellyfin.Plugin.TUIMDB.Api.Models
         /// </summary>
         [JsonPropertyName("Biography")]
         public string? Biography { get; set; }
-
-        /// <summary>
-        /// Gets or sets the original name of the person.
-        /// </summary>
-        [JsonPropertyName("Original Name")]
-        public string? OriginalName { get; set; }
 
         /// <summary>
         /// Gets or sets the primary image of the person.

@@ -1,6 +1,6 @@
 {
     "category": "Metadata",
-    "changelog": "Initial Release",
+    "changelog": "Added crew member support for movies",
     "description": "Get media metadata from TUIMDB\n",
     "guid": "ccc76c68-2d1e-44bc-b8f6-4760d6c6d5c2",
     "imageUrl": "https://tuimdb.com/jellyfin/tuimdb.png",
@@ -8,6 +8,6 @@
     "overview": "Get media metadata from TUIMDB",
     "owner": "TUIMDB",
     "targetAbi": "10.9.0.0",
-    "timestamp": "2026-05-09T19:30:16Z",
-    "version": "1.0.0.0"
+    "timestamp": "2026-07-04T23:34:36Z",
+    "version": "1.1.0.0"
 }

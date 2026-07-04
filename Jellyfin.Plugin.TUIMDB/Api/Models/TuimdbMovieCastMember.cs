@@ -26,6 +26,12 @@ public class TuimdbMovieCastMember
     public int PersonId { get; set; }
 
     /// <summary>
+    /// Gets or sets the unique identifier of the credited name for the cast member.
+    /// </summary>
+    [JsonPropertyName("Name ID")]
+    public int? NameId { get; set; }
+
+    /// <summary>
     /// Gets or sets the order number for the cast member.
     /// </summary>
     [JsonPropertyName("Order")]
@@ -84,4 +90,10 @@ public class TuimdbMovieCastMember
     /// </summary>
     [JsonPropertyName("Person")]
     public TuimdbPerson? Person { get; set; }
+
+    /// <summary>
+    /// Gets or sets the credited name of the cast member.
+    /// </summary>
+    [JsonPropertyName("Credited As")]
+    public TuimdbPersonName? CreditedAs { get; set; }
 }

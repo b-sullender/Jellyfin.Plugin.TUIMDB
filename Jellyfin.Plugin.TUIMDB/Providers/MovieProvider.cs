@@ -41,7 +41,7 @@ public class MovieProvider :
         {
             UserAgent =
             {
-                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.0.0.0")
+                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
             }
         }
     };
@@ -120,6 +120,36 @@ public class MovieProvider :
         }
 
         return null;
+    }
+
+    private static PersonKind MapCrewToPersonType(int roleId)
+    {
+        if (roleId == 1)
+        {
+            return PersonKind.Director;
+        }
+
+        if (roleId == 13)
+        {
+            return PersonKind.Composer;
+        }
+
+        if (roleId == 3)
+        {
+            return PersonKind.Writer;
+        }
+
+        if (roleId == 7)
+        {
+            return PersonKind.Producer;
+        }
+
+        if (roleId == 6)
+        {
+            return PersonKind.Creator;
+        }
+
+        return PersonKind.Unknown;
     }
 
     /// <summary>
@@ -326,7 +356,7 @@ public class MovieProvider :
             movieUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
         }
 
-        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true";
+        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true&includeCrew=true";
         _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
 
         var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
@@ -366,7 +396,7 @@ public class MovieProvider :
             {
                 var personInfo = new PersonInfo
                 {
-                    Name = castMember.Person?.Name ?? castMember.Name,
+                    Name = castMember.Person?.Name,
                     Role = castMember.Name,
                     Type = PersonKind.Actor,
                     SortOrder = castMember.Order
@@ -378,6 +408,29 @@ public class MovieProvider :
                 }
 
                 personInfo.SetProviderId("TUIMDB", castMember.PersonId.ToString(CultureInfo.InvariantCulture));
+
+                result.AddPerson(personInfo);
+            }
+        }
+
+        if (movieInfo.Crew is not null && movieInfo.Crew.Count != 0)
+        {
+            foreach (var crewMember in movieInfo.Crew)
+            {
+                var personInfo = new PersonInfo
+                {
+                    Name = crewMember.Person?.Name,
+                    Role = crewMember.Role,
+                    Type = MapCrewToPersonType(crewMember.RoleId),
+                    SortOrder = crewMember.Order
+                };
+
+                if (crewMember.Person?.PrimaryImage is not null)
+                {
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{crewMember.Person.PrimaryImage.Name}";
+                }
+
+                personInfo.SetProviderId("TUIMDB", crewMember.PersonId.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
             }

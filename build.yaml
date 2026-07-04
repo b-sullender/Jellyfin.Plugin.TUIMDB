@@ -1,7 +1,7 @@
 ---
 name: "TUIMDB"
 guid: "ccc76c68-2d1e-44bc-b8f6-4760d6c6d5c2"
-version: "1.0.0.0"
+version: "1.1.0.0"
 targetAbi: "10.9.0.0"
 framework: "net8.0"
 overview: "Provides metadata from tuimdb.com."
@@ -13,4 +13,4 @@ owner: "TUIMDB"
 artifacts:
 - "Jellyfin.Plugin.TUIMDB.dll"
 changelog: >
-  Initial release.
+  Added crew member support for movies.
