@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -115,7 +116,7 @@ public class SeriesProvider :
                 EpisodeOrder: null);
         }
 
-        string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+        string fileName = Path.GetFileNameWithoutExtension(path);
 
         int? year = null;
         string? episodeOrder = null;
@@ -164,6 +165,142 @@ public class SeriesProvider :
             Year: year,
             ProviderIds: providerIds,
             EpisodeOrder: episodeOrder);
+    }
+
+    /// <summary>
+    /// Loads TUIMDB configuration from a series directory, if present, and
+    /// returns a dictionary of key/value pairs. The following file names are
+    /// supported (case-insensitive):
+    /// - TUIMDB
+    /// - TUIMDB.CONF
+    /// - .TUIMDB
+    /// - .TUIMDB.CONF
+    ///
+    /// The file format is:
+    ///   key: value
+    ///
+    /// Keys and values are trimmed; keys are matched case-insensitively.
+    /// Lines starting with # or ; are treated as comments.
+    /// </summary>
+    /// <param name="path">A path inside the series directory (typically SeriesInfo.Path).</param>
+    /// <returns>
+    /// A dictionary of configuration values (case-insensitive keys),
+    /// or null if no config file is found or it cannot be read.
+    /// </returns>
+    private Dictionary<string, string>? LoadTuimdbConfig(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        string? directory;
+        try
+        {
+            directory = Path.GetDirectoryName(path);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "TUIMDB: Failed to get directory name from path {Path}", path);
+            return null;
+        }
+
+        if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+        {
+            return null;
+        }
+
+        // Supported file names (case-insensitive)
+        var candidateNames = new[]
+        {
+            "TUIMDB",
+            "TUIMDB.CONF",
+            ".TUIMDB",
+            ".TUIMDB.CONF"
+        };
+
+        string? configFilePath = null;
+
+        try
+        {
+            // Enumerate files in the directory once and match names case-insensitively
+            foreach (var file in Directory.EnumerateFiles(directory))
+            {
+                var fileName = Path.GetFileName(file);
+                foreach (var candidate in candidateNames)
+                {
+                    if (fileName.Equals(candidate, StringComparison.OrdinalIgnoreCase))
+                    {
+                        configFilePath = file;
+                        break;
+                    }
+                }
+
+                if (configFilePath != null)
+                {
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "TUIMDB: Failed to enumerate TUIMDB config files in {Directory}", directory);
+            return null;
+        }
+
+        if (configFilePath == null)
+        {
+            return null;
+        }
+
+        _logger.LogDebug("TUIMDB: Using config file {ConfigFilePath}", configFilePath);
+
+        string[] lines;
+        try
+        {
+            lines = File.ReadAllLines(configFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "TUIMDB: Failed to read TUIMDB config file {ConfigFilePath}", configFilePath);
+            return null;
+        }
+
+        var config = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine?.Trim();
+            if (string.IsNullOrEmpty(line))
+            {
+                continue;
+            }
+
+            // Ignore comments starting with # or ;
+            if (line.StartsWith('#') ||
+                line.StartsWith(';'))
+            {
+                continue;
+            }
+
+            var separatorIndex = line.IndexOf(':', StringComparison.Ordinal);
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var key = line[..separatorIndex].Trim();
+            var value = line[(separatorIndex + 1)..].Trim();
+
+            if (string.IsNullOrEmpty(key))
+            {
+                continue;
+            }
+
+            config[key] = value;
+        }
+
+        return config;
     }
 
     /// <summary>
@@ -250,6 +387,31 @@ public class SeriesProvider :
 
         // Parse series name (title, year, provider ids, episode order)
         var parsedName = ParseSeriesName(searchInfo.Path);
+
+        // Apply episode order priority:
+        // 1. TUIMDB file episode-order-id
+        // 2. TUIMDB file episode-order
+        // 3. Episode order from directory name in curly braces (already in parsedName.EpisodeOrder)
+        string? effectiveEpisodeOrder = parsedName.EpisodeOrder;
+
+        var tuimdbConfig = LoadTuimdbConfig(searchInfo.Path);
+        if (tuimdbConfig != null)
+        {
+            if (tuimdbConfig.TryGetValue("episode-order-id", out var episodeOrderId) &&
+                !string.IsNullOrWhiteSpace(episodeOrderId))
+            {
+                effectiveEpisodeOrder = episodeOrderId.Trim();
+                _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+            }
+            else if (tuimdbConfig.TryGetValue("episode-order", out var episodeOrder) &&
+                     !string.IsNullOrWhiteSpace(episodeOrder))
+            {
+                effectiveEpisodeOrder = episodeOrder.Trim();
+                _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+            }
+        }
+
+        parsedName = parsedName with { EpisodeOrder = effectiveEpisodeOrder };
 
         // Log parsed components for debugging
         _logger.LogDebug(
@@ -348,6 +510,31 @@ public class SeriesProvider :
         // Parse series name (title, year, provider ids, episode order)
         var parsedName = ParseSeriesName(info.Path);
 
+        // Apply episode order priority:
+        // 1. TUIMDB file episode-order-id
+        // 2. TUIMDB file episode-order
+        // 3. Episode order from directory name in curly braces (already in parsedName.EpisodeOrder)
+        string? effectiveEpisodeOrder = parsedName.EpisodeOrder;
+
+        var tuimdbConfig = LoadTuimdbConfig(info.Path);
+        if (tuimdbConfig != null)
+        {
+            if (tuimdbConfig.TryGetValue("episode-order-id", out var episodeOrderId) &&
+                !string.IsNullOrWhiteSpace(episodeOrderId))
+            {
+                effectiveEpisodeOrder = episodeOrderId.Trim();
+                _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+            }
+            else if (tuimdbConfig.TryGetValue("episode-order", out var episodeOrder) &&
+                     !string.IsNullOrWhiteSpace(episodeOrder))
+            {
+                effectiveEpisodeOrder = episodeOrder.Trim();
+                _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+            }
+        }
+
+        parsedName = parsedName with { EpisodeOrder = effectiveEpisodeOrder };
+
         // Log parsed components for debugging
         _logger.LogDebug(
             "TUIMDB Parsed series name info: {ParsedSeriesNameJson}",
@@ -419,13 +606,30 @@ public class SeriesProvider :
 
         if (seriesInfo.Order is not null && seriesInfo.Order.Count != 0)
         {
-            if (parsedName.EpisodeOrder is not null)
+            if (!string.IsNullOrWhiteSpace(parsedName.EpisodeOrder))
             {
+                // First try to match by name (case-insensitive)
                 foreach (var order in seriesInfo.Order)
                 {
-                    if (order.Name == parsedName.EpisodeOrder)
+                    if (order.Name != null &&
+                        order.Name.Equals(parsedName.EpisodeOrder, StringComparison.OrdinalIgnoreCase))
                     {
                         episodeOrderUid = order.Uid;
+                        break;
+                    }
+                }
+
+                // If no name match, try to interpret as an ID
+                if (episodeOrderUid == null &&
+                    int.TryParse(parsedName.EpisodeOrder, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedOrderId))
+                {
+                    foreach (var order in seriesInfo.Order)
+                    {
+                        if (order.Uid == parsedOrderId)
+                        {
+                            episodeOrderUid = order.Uid;
+                            break;
+                        }
                     }
                 }
             }
