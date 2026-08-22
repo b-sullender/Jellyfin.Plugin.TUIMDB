@@ -377,6 +377,32 @@ public class MovieProvider :
         movie.Overview = movieInfo.Overview;
         movie.ProductionYear = movieInfo.ReleaseYear;
 
+        // Store TUIMDB collection IDs as a comma-separated provider ID on the movie.
+        if (movieInfo.Collections is not null && movieInfo.Collections.Count > 0)
+        {
+            var collectionIds = new List<string>();
+
+            foreach (var collection in movieInfo.Collections)
+            {
+                if (collection is null || collection.Uid <= 0)
+                {
+                    continue;
+                }
+
+                collectionIds.Add(collection.Uid.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (collectionIds.Count > 0)
+            {
+                var joined = string.Join(",", collectionIds);
+                movie.SetProviderId("TUIMDB_COLLECTIONS", joined);
+                _logger.LogDebug(
+                    "TUIMDB GetMetadata: Stored collection IDs on movie {MovieUid}: {CollectionIds}",
+                    movieUid,
+                    joined);
+            }
+        }
+
         foreach (var genre in movieInfo.Genres)
         {
             movie.AddGenre(genre.Name);

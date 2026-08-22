@@ -65,6 +65,13 @@ public class TuimdbSeries
     public string ContentRating { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the list of collections this series belongs to.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Collections")]
+    public Collection<TuimdbCollectionSet> Collections { get; private set; } = new();
+
+    /// <summary>
     /// Gets the list of posters for the series.
     /// </summary>
     [JsonInclude]

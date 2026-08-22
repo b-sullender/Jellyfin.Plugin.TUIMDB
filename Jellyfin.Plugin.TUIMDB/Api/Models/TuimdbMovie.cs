@@ -71,6 +71,13 @@ public class TuimdbMovie
     public string ContentRating { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the list of collections this movie belongs to.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Collections")]
+    public Collection<TuimdbCollectionSet> Collections { get; private set; } = new();
+
+    /// <summary>
     /// Gets the list of posters for the movie.
     /// </summary>
     [JsonInclude]

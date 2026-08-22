@@ -594,6 +594,32 @@ public class SeriesProvider :
         series.Overview = seriesInfo.Overview;
         series.ProductionYear = seriesInfo.ReleaseYear;
 
+        // Store TUIMDB collection IDs as a comma-separated provider ID on the series.
+        if (seriesInfo.Collections is not null && seriesInfo.Collections.Count > 0)
+        {
+            var collectionIds = new List<string>();
+
+            foreach (var collection in seriesInfo.Collections)
+            {
+                if (collection is null || collection.Uid <= 0)
+                {
+                    continue;
+                }
+
+                collectionIds.Add(collection.Uid.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (collectionIds.Count > 0)
+            {
+                var joined = string.Join(",", collectionIds);
+                series.SetProviderId("TUIMDB_COLLECTIONS", joined);
+                _logger.LogDebug(
+                    "TUIMDB GetMetadata: Stored collection IDs on series {SeriesUid}: {CollectionIds}",
+                    seriesUid,
+                    joined);
+            }
+        }
+
         foreach (var genre in seriesInfo.Genres)
         {
             series.AddGenre(genre.Name);
