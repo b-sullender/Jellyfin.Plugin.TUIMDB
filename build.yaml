@@ -13,4 +13,4 @@ owner: "TUIMDB"
 artifacts:
 - "Jellyfin.Plugin.TUIMDB.dll"
 changelog: >
-  Added crew member support for movies.
+  Added support for collections.

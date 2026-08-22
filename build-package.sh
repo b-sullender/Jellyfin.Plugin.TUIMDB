@@ -19,7 +19,6 @@ PUBLISH_DLL="$BUILD_DIR/Jellyfin.Plugin.TUIMDB.dll"
 META_FILE="meta.json"
 
 PACKAGE_DIR="package"
-ZIP_NAME="${PLUGIN_NAME}.zip"
 
 echo "Cleaning old build artifacts..."
 
@@ -48,6 +47,24 @@ if [ ! -f "$META_FILE" ]; then
     exit 1
 fi
 
+# Get version from meta.json
+VERSION=$(grep -oP '"version"\s*:\s*"\K[^"]+' "$META_FILE")
+
+if [ -z "$VERSION" ]; then
+    echo "ERROR: Could not determine version from $META_FILE."
+    exit 1
+fi
+
+ZIP_NAME="${PLUGIN_NAME}_v${VERSION}.zip"
+
+echo "Plugin version: $VERSION"
+echo "Package name: $ZIP_NAME"
+
+# Update timestamp in meta.json
+timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+echo "Updating meta.json timestamp: $timestamp"
+sed -i "s/\"timestamp\": \"[^\"]*\"/\"timestamp\": \"$timestamp\"/" "$META_FILE"
+
 echo "Creating package structure..."
 
 # Create temporary package directory
@@ -70,3 +87,6 @@ rm -rf "$PACKAGE_DIR"
 
 echo "Package created successfully:"
 echo "  $ZIP_NAME"
+
+echo "Checksum for manifest.json:\n"
+md5sum "$ZIP_NAME"
