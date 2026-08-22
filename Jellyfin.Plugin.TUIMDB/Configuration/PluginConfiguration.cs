@@ -28,7 +28,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Gets or sets the version.
     /// </summary>
-    public string PluginVersion { get; set; } = "1.2.0.0";
+    public string PluginVersion { get; set; } = "1.2.1.0";
 
     /// <summary>
     /// Gets or sets the URL where movie posters are hosted.

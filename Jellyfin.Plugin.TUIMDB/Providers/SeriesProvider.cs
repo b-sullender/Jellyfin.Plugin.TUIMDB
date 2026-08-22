@@ -183,22 +183,13 @@ public class SeriesProvider :
     {
         if (string.IsNullOrWhiteSpace(path))
         {
+            _logger.LogDebug("TUIMDB LoadTuimdbConfig: Path is empty.");
             return null;
         }
 
-        string? directory;
-        try
+        if (!Directory.Exists(path))
         {
-            directory = Path.GetDirectoryName(path);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "TUIMDB: Failed to get directory name from path {Path}", path);
-            return null;
-        }
-
-        if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
-        {
+            _logger.LogDebug("TUIMDB LoadTuimdbConfig: Directory {Path} not found.", path);
             return null;
         }
 
@@ -216,7 +207,7 @@ public class SeriesProvider :
         try
         {
             // Enumerate files in the directory once and match names case-insensitively
-            foreach (var file in Directory.EnumerateFiles(directory))
+            foreach (var file in Directory.EnumerateFiles(path))
             {
                 var fileName = Path.GetFileName(file);
                 foreach (var candidate in candidateNames)
@@ -236,12 +227,13 @@ public class SeriesProvider :
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "TUIMDB: Failed to enumerate TUIMDB config files in {Directory}", directory);
+            _logger.LogDebug(ex, "TUIMDB: Failed to enumerate TUIMDB config files in {Directory}", path);
             return null;
         }
 
         if (configFilePath == null)
         {
+            _logger.LogDebug("TUIMDB: Configuration file not found in {Directory}.", path);
             return null;
         }
 
