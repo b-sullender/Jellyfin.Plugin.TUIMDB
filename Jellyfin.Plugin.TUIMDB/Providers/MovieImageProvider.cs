@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using Jellyfin.Plugin.TUIMDB.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
@@ -22,17 +23,7 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
     public class MovieImageProvider : IRemoteImageProvider, IHasOrder
     {
         private readonly ILogger<MovieImageProvider> _logger;
-
-        private static readonly HttpClient _httpClient = new HttpClient
-        {
-            DefaultRequestHeaders =
-            {
-                UserAgent =
-                {
-                    new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
-                }
-            }
-        };
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
         {
@@ -104,6 +95,9 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             {
                 request.Headers.Add("apiKey", config.ApiKey);
             }
+
+            request.Headers.UserAgent.Add(
+                new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
             try
             {

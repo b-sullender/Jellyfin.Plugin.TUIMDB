@@ -21,6 +21,16 @@ public class PluginConfiguration : BasePluginConfiguration
     public string ApiBaseUrl { get; set; } = "https://tuimdb.com/api";
 
     /// <summary>
+    /// Gets or sets the user agent.
+    /// </summary>
+    public string PluginUserAgent { get; set; } = "Jellyfin_Plugin";
+
+    /// <summary>
+    /// Gets or sets the version.
+    /// </summary>
+    public string PluginVersion { get; set; } = "1.2.0.0";
+
+    /// <summary>
     /// Gets or sets the URL where movie posters are hosted.
     /// </summary>
     public string MoviePostersUrl { get; set; } = "https://tuimdb.com/movies/posters";

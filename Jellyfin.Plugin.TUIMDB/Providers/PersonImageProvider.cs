@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using Jellyfin.Plugin.TUIMDB.Configuration;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Providers;
@@ -30,16 +31,7 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         /// <summary>
         /// The HTTP client used to call TUIMDB API.
         /// </summary>
-        private static readonly HttpClient _httpClient = new HttpClient
-        {
-            DefaultRequestHeaders =
-            {
-                UserAgent =
-                {
-                    new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
-                }
-            }
-        };
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         /// <summary>
         /// JSON serialization options used for logging and API requests.
@@ -94,18 +86,21 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         /// </summary>
         /// <typeparam name="T">The expected type of the JSON response.</typeparam>
         /// <param name="url">The request URL.</param>
-        /// <param name="apiKey">The TUIMDB API key.</param>
+        /// <param name="config">The plugin configuration.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The deserialized response, or null if the request failed.</returns>
-        private async Task<T?> GetFromApiAsync<T>(string url, string? apiKey, CancellationToken cancellationToken)
+        private async Task<T?> GetFromApiAsync<T>(string url, PluginConfiguration config, CancellationToken cancellationToken)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
             // Add API key header if provided
-            if (!string.IsNullOrWhiteSpace(apiKey))
+            if (!string.IsNullOrWhiteSpace(config.ApiKey))
             {
-                request.Headers.Add("apiKey", apiKey);
+                request.Headers.Add("apiKey", config.ApiKey);
             }
+
+            request.Headers.UserAgent.Add(
+                new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
             // Log HttpClient default headers
             foreach (var header in _httpClient.DefaultRequestHeaders)
@@ -190,7 +185,7 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             var url = $"{config.ApiBaseUrl}/people/images/?uid={personId}";
             _logger.LogDebug("TUIMDB PersonImageProvider GetImages: Query URL = {Url}", url);
 
-            var imagesObject = await GetFromApiAsync<TuimdbPersonImages>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+            var imagesObject = await GetFromApiAsync<TuimdbPersonImages>(url, config, cancellationToken).ConfigureAwait(false);
             if (imagesObject == null || imagesObject.Images == null || imagesObject.Images.Count == 0)
             {
                 _logger.LogDebug("TUIMDB PersonImageProvider: no images found for person with UID {PersonId}", personId);

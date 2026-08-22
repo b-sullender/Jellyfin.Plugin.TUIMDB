@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using Jellyfin.Plugin.TUIMDB.Configuration;
 using MediaBrowser.Controller.Collections;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -29,20 +30,7 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
     private readonly ICollectionManager _collectionManager;
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<MovieCollectionProvider> _logger;
-
-    /// <summary>
-    /// The HTTP client used to call TUIMDB API.
-    /// </summary>
-    private static readonly HttpClient _httpClient = new HttpClient
-    {
-        DefaultRequestHeaders =
-        {
-            UserAgent =
-            {
-                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
-            }
-        }
-    };
+    private static readonly HttpClient _httpClient = new HttpClient();
 
     /// <summary>
     /// JSON serialization options used for logging and API requests.
@@ -136,8 +124,7 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
 
             // Fetch collection details from TUIMDB to get name and overview.
             var collectionInfo = await GetCollectionFromApiAsync(
-                config.ApiBaseUrl,
-                config.ApiKey,
+                config,
                 collectionUidString,
                 cancellationToken).ConfigureAwait(false);
 
@@ -225,14 +212,12 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
     /// <summary>
     /// Calls the TUIMDB collections API to fetch collection details.
     /// </summary>
-    /// <param name="apiBaseUrl">The TUIMDB API base URL from plugin configuration.</param>
-    /// <param name="apiKey">The TUIMDB API key.</param>
+    /// <param name="config">The plugin configuration.</param>
     /// <param name="collectionUid">The TUIMDB collection UID as string.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The <see cref="TuimdbCollectionSet"/> or null if the call fails.</returns>
     private async Task<TuimdbCollectionSet?> GetCollectionFromApiAsync(
-        string apiBaseUrl,
-        string? apiKey,
+        PluginConfiguration config,
         string collectionUid,
         CancellationToken cancellationToken)
     {
@@ -241,15 +226,18 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
             return null;
         }
 
-        var url = $"{apiBaseUrl}/collections/get/?uid={collectionUid}&includeOverview=true";
+        var url = $"{config.ApiBaseUrl}/collections/get/?uid={collectionUid}&includeOverview=true";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         // Add API key header if provided
-        if (!string.IsNullOrWhiteSpace(apiKey))
+        if (!string.IsNullOrWhiteSpace(config.ApiKey))
         {
-            request.Headers.Add("apiKey", apiKey);
+            request.Headers.Add("apiKey", config.ApiKey);
         }
+
+        request.Headers.UserAgent.Add(
+            new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
         // Log HttpClient default headers
         foreach (var header in _httpClient.DefaultRequestHeaders)

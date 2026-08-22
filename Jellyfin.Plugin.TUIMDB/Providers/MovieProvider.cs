@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Jellyfin.Extensions;
 using Jellyfin.Plugin.TUIMDB.Api.Models;
+using Jellyfin.Plugin.TUIMDB.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
@@ -35,16 +36,7 @@ public class MovieProvider :
     /// <summary>
     /// The HTTP client used to call TUIMDB API.
     /// </summary>
-    private static readonly HttpClient _httpClient = new HttpClient
-    {
-        DefaultRequestHeaders =
-        {
-            UserAgent =
-            {
-                new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
-            }
-        }
-    };
+    private static readonly HttpClient _httpClient = new HttpClient();
 
     /// <summary>
     /// JSON serialization options used for logging and API requests.
@@ -158,18 +150,21 @@ public class MovieProvider :
     /// </summary>
     /// <typeparam name="T">The expected type of the JSON response.</typeparam>
     /// <param name="url">The request URL.</param>
-    /// <param name="apiKey">The TUIMDB API key.</param>
+    /// <param name="config">The plugin configuration.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The deserialized response, or null if the request failed.</returns>
-    private async Task<T?> GetFromApiAsync<T>(string url, string? apiKey, CancellationToken cancellationToken)
+    private async Task<T?> GetFromApiAsync<T>(string url, PluginConfiguration config, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         // Add API key header if provided
-        if (!string.IsNullOrWhiteSpace(apiKey))
+        if (!string.IsNullOrWhiteSpace(config.ApiKey))
         {
-            request.Headers.Add("apiKey", apiKey);
+            request.Headers.Add("apiKey", config.ApiKey);
         }
+
+        request.Headers.UserAgent.Add(
+            new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
         // Log HttpClient default headers
         foreach (var header in _httpClient.DefaultRequestHeaders)
@@ -259,7 +254,7 @@ public class MovieProvider :
         var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
         _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
 
-        var response = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        var response = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
         if (response == null || response.Count == 0)
         {
             _logger.LogDebug("TUIMDB Search: No results found.");
@@ -340,7 +335,7 @@ public class MovieProvider :
             url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
             _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
 
-            var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+            var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
             if (searchResults == null || searchResults.Count == 0)
             {
                 _logger.LogDebug("TUIMDB Movie Search: No results found.");
@@ -359,7 +354,7 @@ public class MovieProvider :
         url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true&includeCrew=true";
         _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
 
-        var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config.ApiKey, cancellationToken).ConfigureAwait(false);
+        var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config, cancellationToken).ConfigureAwait(false);
         if (movieInfo == null)
         {
             _logger.LogDebug("TUIMDB Details: Failed to get movie info with UID {Uid}.", movieUid);

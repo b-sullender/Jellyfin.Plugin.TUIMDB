@@ -22,17 +22,7 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
     public class CollectionImageProvider : IRemoteImageProvider, IHasOrder
     {
         private readonly ILogger<CollectionImageProvider> _logger;
-
-        private static readonly HttpClient _httpClient = new HttpClient
-        {
-            DefaultRequestHeaders =
-            {
-                UserAgent =
-                {
-                    new System.Net.Http.Headers.ProductInfoHeaderValue("Jellyfin_Plugin", "1.1.0.0")
-                }
-            }
-        };
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
         {
@@ -104,6 +94,9 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             {
                 request.Headers.Add("apiKey", config.ApiKey);
             }
+
+            request.Headers.UserAgent.Add(
+                new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
             try
             {
