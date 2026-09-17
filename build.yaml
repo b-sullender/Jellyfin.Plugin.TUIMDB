@@ -4,13 +4,10 @@ guid: "ccc76c68-2d1e-44bc-b8f6-4760d6c6d5c2"
 version: "1.2.1.0"
 targetAbi: "10.9.0.0"
 framework: "net8.0"
-overview: "Provides metadata from tuimdb.com."
-description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
+overview: "Get media metadata from TUIMDB"
+description: "Get media metadata from TUIMDB\n"
 category: "Metadata"
 owner: "TUIMDB"
 artifacts:
-- "Jellyfin.Plugin.TUIMDB.dll"
-changelog: >
-  Added support for collections.
+  - "Jellyfin.Plugin.TUIMDB.dll"
+changelog: "Added support for collections"

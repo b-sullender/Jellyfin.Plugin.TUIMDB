@@ -53,16 +53,22 @@ Spartacus (2010) {Alternative Order}
 Build and install the plugin directly using:
 
 ```bash
-sudo bash build-install.sh
+bash build-install.sh
 ```
 
 ### Build Plugin Package
 
-Build and package the plugin as a ZIP file:
+Create the next release package while updating the version, changelog, timestamp,
+DLL assembly version, and Jellyfin build metadata together:
 
 ```bash
-bash build-package.sh
+bash build-package.sh --version 1.2.2.0 --changelog "Describe the release"
 ```
+
+The package command updates the version and changelog in `meta.json`,
+`build.yaml`, and `Directory.Build.props`, then creates
+`TUIMDB_v<version>.zip`. It refuses to build if those files, the plugin GUID,
+or the target framework are out of sync.
 
 ## API
 
