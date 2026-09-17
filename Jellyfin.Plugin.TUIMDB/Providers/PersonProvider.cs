@@ -239,7 +239,10 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             if (personId > 0)
             {
                 var url = $"{config.ApiBaseUrl}/people/get/?uid={personId}";
-                _logger.LogDebug("TUIMDB PersonProvider GetMetadata: Query URL = {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB PersonProvider GetMetadata: Query URL = {Url}", url);
+                }
 
                 var person = await GetFromApiAsync<TuimdbPerson>(url, config, cancellationToken).ConfigureAwait(false);
                 if (person is null)

@@ -78,7 +78,10 @@ public class EpisodeProvider :
         string url,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        }
 
         return await _httpClient
             .GetAsync(url, cancellationToken)
@@ -147,7 +150,10 @@ public class EpisodeProvider :
             var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                }
             }
 
             return response;

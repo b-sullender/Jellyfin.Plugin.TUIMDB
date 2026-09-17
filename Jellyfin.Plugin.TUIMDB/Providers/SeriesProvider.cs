@@ -79,7 +79,10 @@ public class SeriesProvider :
         string url,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        }
 
         return await _httpClient
             .GetAsync(url, cancellationToken)
@@ -189,7 +192,11 @@ public class SeriesProvider :
 
         if (!Directory.Exists(path))
         {
-            _logger.LogDebug("TUIMDB LoadTuimdbConfig: Directory {Path} not found.", path);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB LoadTuimdbConfig: Directory {Path} not found.", path);
+            }
+
             return null;
         }
 
@@ -227,17 +234,28 @@ public class SeriesProvider :
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "TUIMDB: Failed to enumerate TUIMDB config files in {Directory}", path);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(ex, "TUIMDB: Failed to enumerate TUIMDB config files in {Directory}", path);
+            }
+
             return null;
         }
 
         if (configFilePath == null)
         {
-            _logger.LogDebug("TUIMDB: Configuration file not found in {Directory}.", path);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB: Configuration file not found in {Directory}.", path);
+            }
+
             return null;
         }
 
-        _logger.LogDebug("TUIMDB: Using config file {ConfigFilePath}", configFilePath);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB: Using config file {ConfigFilePath}", configFilePath);
+        }
 
         string[] lines;
         try
@@ -246,7 +264,11 @@ public class SeriesProvider :
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "TUIMDB: Failed to read TUIMDB config file {ConfigFilePath}", configFilePath);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(ex, "TUIMDB: Failed to read TUIMDB config file {ConfigFilePath}", configFilePath);
+            }
+
             return null;
         }
 
@@ -349,7 +371,10 @@ public class SeriesProvider :
             var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                }
             }
 
             return response;

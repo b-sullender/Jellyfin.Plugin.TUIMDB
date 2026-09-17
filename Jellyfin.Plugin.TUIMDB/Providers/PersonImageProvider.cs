@@ -186,12 +186,19 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             var config = Plugin.Instance.Configuration;
 
             var url = $"{config.ApiBaseUrl}/people/images/?uid={personId}";
-            _logger.LogDebug("TUIMDB PersonImageProvider GetImages: Query URL = {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB PersonImageProvider GetImages: Query URL = {Url}", url);
+            }
 
             var imagesObject = await GetFromApiAsync<TuimdbPersonImages>(url, config, cancellationToken).ConfigureAwait(false);
             if (imagesObject == null || imagesObject.Images == null || imagesObject.Images.Count == 0)
             {
-                _logger.LogDebug("TUIMDB PersonImageProvider: no images found for person with UID {PersonId}", personId);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB PersonImageProvider: no images found for person with UID {PersonId}", personId);
+                }
+
                 return Enumerable.Empty<RemoteImageInfo>();
             }
 

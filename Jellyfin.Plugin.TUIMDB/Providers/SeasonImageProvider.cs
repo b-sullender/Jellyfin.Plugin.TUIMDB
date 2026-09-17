@@ -92,7 +92,10 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             var language = item.GetPreferredMetadataLanguage() ?? "en";
 
             var url = $"{config.ApiBaseUrl}/series/season/posters/?seriesId={seriesUid}&seasonId={seasonUid}&language={language}";
-            _logger.LogDebug("TUIMDB Season ImageProvider: Fetching posters from {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB Season ImageProvider: Fetching posters from {Url}", url);
+            }
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrWhiteSpace(config.ApiKey))
@@ -196,7 +199,11 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             string url,
             CancellationToken cancellationToken)
         {
-            _logger.LogDebug("TUIMDB ImageProvider: Fetching image {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB ImageProvider: Fetching image {Url}", url);
+            }
+
             return _httpClient.GetAsync(url, cancellationToken);
         }
     }

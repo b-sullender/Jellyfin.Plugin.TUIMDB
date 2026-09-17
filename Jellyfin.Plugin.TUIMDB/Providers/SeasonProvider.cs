@@ -148,7 +148,10 @@ public class SeasonProvider :
             var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                }
             }
 
             return response;
@@ -230,10 +233,13 @@ public class SeasonProvider :
         info.SeriesProviderIds.TryGetValue("TUIMDB_EpisodeOrderUid", out var episodeOrderUid);
         var seasonNumber = info.IndexNumber;
 
-        _logger.LogDebug("TUIMDB Season GetMetadata: Series UID: {SeriesUid}", seriesUid);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order: {EpisodeOrder}", episodeOrder);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Episode order UID: {EpisodeOrderUid}", episodeOrderUid);
-        _logger.LogDebug("TUIMDB Season GetMetadata: Season number: {SeasonNumber}", seasonNumber);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Season GetMetadata: Series UID: {SeriesUid}", seriesUid);
+            _logger.LogDebug("TUIMDB Season GetMetadata: Episode order: {EpisodeOrder}", episodeOrder);
+            _logger.LogDebug("TUIMDB Season GetMetadata: Episode order UID: {EpisodeOrderUid}", episodeOrderUid);
+            _logger.LogDebug("TUIMDB Season GetMetadata: Season number: {SeasonNumber}", seasonNumber);
+        }
 
         if (string.IsNullOrEmpty(seriesUid) || string.IsNullOrEmpty(episodeOrderUid) || !seasonNumber.HasValue)
         {
@@ -242,7 +248,10 @@ public class SeasonProvider :
         }
 
         url = $"{config.ApiBaseUrl}/series/order/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}";
-        _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+        }
 
         var seriesSeasons = await GetFromApiAsync<List<TuimdbSeason>>(url, config, cancellationToken).ConfigureAwait(false);
         if (seriesSeasons == null || seriesSeasons.Count == 0)
