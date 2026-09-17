@@ -166,22 +166,25 @@ public class MovieProvider :
         request.Headers.UserAgent.Add(
             new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-        // Log HttpClient default headers
-        foreach (var header in _httpClient.DefaultRequestHeaders)
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
+            // Log HttpClient default headers.
+            foreach (var header in _httpClient.DefaultRequestHeaders)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
 
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB API: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
+            // Log request-specific headers.
+            foreach (var header in request.Headers)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: Request Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
         }
 
         try
@@ -225,9 +228,12 @@ public class MovieProvider :
         MovieInfo searchInfo,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetSearchResults MovieInfo dump: {MovieInfoJson}",
-            JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetSearchResults MovieInfo dump: {MovieInfoJson}",
+                JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        }
 
         // Use Year from MovieInfo if available, otherwise extract from Path
         int? year = searchInfo.Year ?? ExtractYearFromPath(searchInfo.Path);
@@ -298,9 +304,12 @@ public class MovieProvider :
         MovieInfo info,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetMetadata MovieInfo dump: {MovieInfoJson}",
-            JsonSerializer.Serialize(info, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata MovieInfo dump: {MovieInfoJson}",
+                JsonSerializer.Serialize(info, _jsonOptions));
+        }
 
         var result = new MetadataResult<Movie>();
         result.HasMetadata = false;
@@ -361,9 +370,12 @@ public class MovieProvider :
             return result;
         }
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Movie Info dump: {MetadataJson}",
-            JsonSerializer.Serialize(movieInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Movie Info dump: {MetadataJson}",
+                JsonSerializer.Serialize(movieInfo, _jsonOptions));
+        }
 
         var movie = new Movie();
         movie.SetProviderId("TUIMDB", movieUid);
@@ -457,13 +469,16 @@ public class MovieProvider :
             }
         }
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Movie Class dump: {MetadataJson}",
-            JsonSerializer.Serialize(movie, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Movie Class dump: {MetadataJson}",
+                JsonSerializer.Serialize(movie, _jsonOptions));
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata MetadataResult<Movie> dump: {MetadataJson}",
-            JsonSerializer.Serialize(result, _jsonOptions));
+            _logger.LogDebug(
+                "TUIMDB GetMetadata MetadataResult<Movie> dump: {MetadataJson}",
+                JsonSerializer.Serialize(result, _jsonOptions));
+        }
 
         return result;
     }

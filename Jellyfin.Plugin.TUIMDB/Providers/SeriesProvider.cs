@@ -309,22 +309,25 @@ public class SeriesProvider :
         request.Headers.UserAgent.Add(
             new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-        // Log HttpClient default headers
-        foreach (var header in _httpClient.DefaultRequestHeaders)
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
+            // Log HttpClient default headers.
+            foreach (var header in _httpClient.DefaultRequestHeaders)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
 
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB API: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
+            // Log request-specific headers.
+            foreach (var header in request.Headers)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: Request Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
         }
 
         try
@@ -368,9 +371,12 @@ public class SeriesProvider :
         SeriesInfo searchInfo,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetSearchResults SeriesInfo dump: {SeriesInfoJson}",
-            JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetSearchResults SeriesInfo dump: {SeriesInfoJson}",
+                JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        }
 
         // Parse series name (title, year, provider ids, episode order)
         var parsedName = ParseSeriesName(searchInfo.Path);
@@ -401,9 +407,12 @@ public class SeriesProvider :
         parsedName = parsedName with { EpisodeOrder = effectiveEpisodeOrder };
 
         // Log parsed components for debugging
-        _logger.LogDebug(
-            "TUIMDB Parsed series name info (search): {ParsedSeriesNameJson}",
-            JsonSerializer.Serialize(parsedName, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB Parsed series name info (search): {ParsedSeriesNameJson}",
+                JsonSerializer.Serialize(parsedName, _jsonOptions));
+        }
 
         // Prefer SeriesInfo.Year, otherwise parsed year
         int? year = searchInfo.Year ?? parsedName.Year;
@@ -474,9 +483,12 @@ public class SeriesProvider :
         SeriesInfo info,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetMetadata SeriesInfo dump: {SeriesInfoJson}",
-            JsonSerializer.Serialize(info, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata SeriesInfo dump: {SeriesInfoJson}",
+                JsonSerializer.Serialize(info, _jsonOptions));
+        }
 
         var result = new MetadataResult<Series>();
         result.HasMetadata = false;
@@ -523,9 +535,12 @@ public class SeriesProvider :
         parsedName = parsedName with { EpisodeOrder = effectiveEpisodeOrder };
 
         // Log parsed components for debugging
-        _logger.LogDebug(
-            "TUIMDB Parsed series name info: {ParsedSeriesNameJson}",
-            JsonSerializer.Serialize(parsedName, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB Parsed series name info: {ParsedSeriesNameJson}",
+                JsonSerializer.Serialize(parsedName, _jsonOptions));
+        }
 
         // User selected title from the search feature in Jellyfin
         info.ProviderIds.TryGetValue("TUIMDB", out var seriesUid);
@@ -570,9 +585,12 @@ public class SeriesProvider :
             return result;
         }
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Series Info dump: {MetadataJson}",
-            JsonSerializer.Serialize(seriesInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Series Info dump: {MetadataJson}",
+                JsonSerializer.Serialize(seriesInfo, _jsonOptions));
+        }
 
         var series = new Series();
         series.SetProviderId("TUIMDB", seriesUid);
@@ -668,13 +686,16 @@ public class SeriesProvider :
         result.ResultLanguage = seriesInfo.LanguageCode;
         result.Item = series;
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Series Class dump: {MetadataJson}",
-            JsonSerializer.Serialize(series, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Series Class dump: {MetadataJson}",
+                JsonSerializer.Serialize(series, _jsonOptions));
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata MetadataResult<Series> dump: {MetadataJson}",
-            JsonSerializer.Serialize(result, _jsonOptions));
+            _logger.LogDebug(
+                "TUIMDB GetMetadata MetadataResult<Series> dump: {MetadataJson}",
+                JsonSerializer.Serialize(result, _jsonOptions));
+        }
 
         return result;
     }

@@ -107,22 +107,25 @@ public class EpisodeProvider :
         request.Headers.UserAgent.Add(
             new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-        // Log HttpClient default headers
-        foreach (var header in _httpClient.DefaultRequestHeaders)
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
+            // Log HttpClient default headers.
+            foreach (var header in _httpClient.DefaultRequestHeaders)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
 
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB API: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
+            // Log request-specific headers.
+            foreach (var header in request.Headers)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: Request Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
         }
 
         try
@@ -166,9 +169,12 @@ public class EpisodeProvider :
         EpisodeInfo searchInfo,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetSearchResults EpisodeInfo dump: {EpisodeInfoJson}",
-            JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetSearchResults EpisodeInfo dump: {EpisodeInfoJson}",
+                JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        }
 
         var results = Array.Empty<RemoteSearchResult>();
 
@@ -194,9 +200,12 @@ public class EpisodeProvider :
         EpisodeInfo info,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetMetadata EpisodeInfo dump: {EpisodeInfoJson}",
-            JsonSerializer.Serialize(info, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata EpisodeInfo dump: {EpisodeInfoJson}",
+                JsonSerializer.Serialize(info, _jsonOptions));
+        }
 
         var result = new MetadataResult<Episode>();
         result.HasMetadata = false;
@@ -241,9 +250,12 @@ public class EpisodeProvider :
 
         var episodeInfo = episodes[0];
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Episode Info dump: {MetadataJson}",
-            JsonSerializer.Serialize(episodeInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Episode Info dump: {MetadataJson}",
+                JsonSerializer.Serialize(episodeInfo, _jsonOptions));
+        }
 
         result.HasMetadata = true;
 

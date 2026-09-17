@@ -108,22 +108,25 @@ public class SeasonProvider :
         request.Headers.UserAgent.Add(
             new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-        // Log HttpClient default headers
-        foreach (var header in _httpClient.DefaultRequestHeaders)
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
+            // Log HttpClient default headers.
+            foreach (var header in _httpClient.DefaultRequestHeaders)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
 
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB API: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
+            // Log request-specific headers.
+            foreach (var header in request.Headers)
+            {
+                _logger.LogDebug(
+                    "TUIMDB API: Request Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
         }
 
         try
@@ -167,9 +170,12 @@ public class SeasonProvider :
         SeasonInfo searchInfo,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetSearchResults SeasonInfo dump: {SeasonInfoJson}",
-            JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetSearchResults SeasonInfo dump: {SeasonInfoJson}",
+                JsonSerializer.Serialize(searchInfo, _jsonOptions));
+        }
 
         var results = new List<RemoteSearchResult>();
 
@@ -195,9 +201,12 @@ public class SeasonProvider :
         SeasonInfo info,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB GetMetadata SeasonInfo dump: {SeasonInfoJson}",
-            JsonSerializer.Serialize(info, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata SeasonInfo dump: {SeasonInfoJson}",
+                JsonSerializer.Serialize(info, _jsonOptions));
+        }
 
         var result = new MetadataResult<Season>();
         result.HasMetadata = false;
@@ -244,9 +253,12 @@ public class SeasonProvider :
 
         var seasonInfo = seriesSeasons[0];
 
-        _logger.LogDebug(
-            "TUIMDB GetMetadata Season Info dump: {MetadataJson}",
-            JsonSerializer.Serialize(seasonInfo, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB GetMetadata Season Info dump: {MetadataJson}",
+                JsonSerializer.Serialize(seasonInfo, _jsonOptions));
+        }
 
         result.HasMetadata = true;
         result.Item = new Season

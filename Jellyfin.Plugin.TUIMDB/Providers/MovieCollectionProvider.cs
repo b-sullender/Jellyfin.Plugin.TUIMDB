@@ -74,9 +74,12 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
         MetadataRefreshOptions options,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug(
-            "TUIMDB MovieCollectionProvider item dump: {ItemJson}",
-            JsonSerializer.Serialize(item, _jsonOptions));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug(
+                "TUIMDB MovieCollectionProvider item dump: {ItemJson}",
+                JsonSerializer.Serialize(item, _jsonOptions));
+        }
 
         // Only operate on items that have a TUIMDB id.
         var tuimdbId = item.GetProviderId("TUIMDB");
@@ -239,22 +242,25 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
         request.Headers.UserAgent.Add(
             new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-        // Log HttpClient default headers
-        foreach (var header in _httpClient.DefaultRequestHeaders)
+        if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug(
-                "TUIMDB Collections API: HttpClient Default Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
-        }
+            // Log HttpClient default headers.
+            foreach (var header in _httpClient.DefaultRequestHeaders)
+            {
+                _logger.LogDebug(
+                    "TUIMDB Collections API: HttpClient Default Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
 
-        // Log request-specific headers
-        foreach (var header in request.Headers)
-        {
-            _logger.LogDebug(
-                "TUIMDB Collections API: Request Header: {Name} = {Values}",
-                header.Key,
-                string.Join(", ", header.Value));
+            // Log request-specific headers.
+            foreach (var header in request.Headers)
+            {
+                _logger.LogDebug(
+                    "TUIMDB Collections API: Request Header: {Name} = {Values}",
+                    header.Key,
+                    string.Join(", ", header.Value));
+            }
         }
 
         try
@@ -280,7 +286,7 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
             {
                 _logger.LogDebug("TUIMDB Collections API: Response was empty for URL {Url}", url);
             }
-            else
+            else if (_logger.IsEnabled(LogLevel.Debug))
             {
                 _logger.LogDebug(
                     "TUIMDB Collections API: Collection info dump for UID {Uid}: {Json}",

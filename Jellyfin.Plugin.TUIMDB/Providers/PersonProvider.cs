@@ -102,22 +102,25 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             request.Headers.UserAgent.Add(
                 new System.Net.Http.Headers.ProductInfoHeaderValue(config.PluginUserAgent, config.PluginVersion));
 
-            // Log HttpClient default headers
-            foreach (var header in _httpClient.DefaultRequestHeaders)
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
-                _logger.LogDebug(
-                    "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
-                    header.Key,
-                    string.Join(", ", header.Value));
-            }
+                // Log HttpClient default headers.
+                foreach (var header in _httpClient.DefaultRequestHeaders)
+                {
+                    _logger.LogDebug(
+                        "TUIMDB API: HttpClient Default Header: {Name} = {Values}",
+                        header.Key,
+                        string.Join(", ", header.Value));
+                }
 
-            // Log request-specific headers
-            foreach (var header in request.Headers)
-            {
-                _logger.LogDebug(
-                    "TUIMDB API: Request Header: {Name} = {Values}",
-                    header.Key,
-                    string.Join(", ", header.Value));
+                // Log request-specific headers.
+                foreach (var header in request.Headers)
+                {
+                    _logger.LogDebug(
+                        "TUIMDB API: Request Header: {Name} = {Values}",
+                        header.Key,
+                        string.Join(", ", header.Value));
+                }
             }
 
             try
@@ -154,9 +157,12 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
         /// <inheritdoc />
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(PersonLookupInfo searchInfo, CancellationToken cancellationToken)
         {
-            _logger.LogDebug(
-                "TUIMDB GetSearchResults PersonLookupInfo dump: {PersonLookupInfoJson}",
-                JsonSerializer.Serialize(searchInfo, _jsonOptions));
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB GetSearchResults PersonLookupInfo dump: {PersonLookupInfoJson}",
+                    JsonSerializer.Serialize(searchInfo, _jsonOptions));
+            }
 
             // Get user metadata language
             string metadataLanguage = searchInfo.MetadataLanguage ?? "en";
