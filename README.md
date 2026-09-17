@@ -48,33 +48,68 @@ Spartacus (2010) {Alternative Order}
 
 ## Building From Source
 
-### Debian-Based Systems
+Run all build commands from the repository root. You need the .NET 8 SDK; package
+creation also requires `zip`. Local installation is intended for Debian-based
+systems with a `jellyfin` service account.
 
-Build and install the plugin directly using:
+### Verify a Local Build
 
-```bash
-bash build-install.sh
-```
-
-To verify the build without installing files or restarting Jellyfin:
+Build the plugin and validate its release metadata without changing your Jellyfin
+installation:
 
 ```bash
 bash build-install.sh --dry-run
 ```
 
-### Build Plugin Package
+The build is written to a temporary directory and removed afterwards. This is the
+recommended first check after changing plugin code or release metadata.
 
-Create the next release package while updating the version, changelog, timestamp,
-DLL assembly version, and Jellyfin build metadata together:
+### Install Locally
+
+Build and install the plugin into a local Jellyfin server:
+
+```bash
+bash build-install.sh
+```
+
+The script asks for `sudo` only when it copies the DLL and `meta.json` to
+`/var/lib/jellyfin/plugins/TUIMDB` and restarts Jellyfin. Installing `meta.json`
+is required for the dashboard to show the plugin owner and correct version.
+
+### Create a Release Package
+
+Create the next release ZIP while updating the version and changelog everywhere
+they are required:
 
 ```bash
 bash build-package.sh --version 1.2.2.0 --changelog "Describe the release"
 ```
 
-The package command updates the version and changelog in `meta.json`,
-`build.yaml`, and `Directory.Build.props`, then creates
-`TUIMDB_v<version>.zip`. It refuses to build if those files, the plugin GUID,
-or the target framework are out of sync.
+Versions must contain exactly four numeric segments, such as `1.2.2.0`. Keep the
+changelog entry to one line. The command:
+
+1. Updates the version and changelog in `meta.json` and `build.yaml`.
+2. Updates `Version`, `AssemblyVersion`, and `FileVersion` in
+   `Directory.Build.props` so the DLL reports the released version.
+3. Updates the `meta.json` timestamp, builds the plugin, and creates
+   `TUIMDB_v<version>.zip` plus its MD5 checksum.
+
+The ZIP contains only `Jellyfin.Plugin.TUIMDB.dll` and `meta.json` at its root.
+Review and commit the metadata changes before creating the corresponding Git tag
+and publishing the archive.
+
+### Release Metadata Checks
+
+Both scripts stop before building if the release identity is inconsistent. They
+verify that the version agrees across `meta.json`, `build.yaml`, and
+`Directory.Build.props`; that the GUID agrees with the `Id` in `Plugin.cs`; and
+that the project target framework agrees with `build.yaml`.
+
+For changes other than the version and changelog, update the relevant tracked
+metadata before running a script. In particular, do not change the plugin GUID
+after publishing a release. The repository manifest hosted at
+`https://tuimdb.com/jellyfin/manifest.json` must use that same GUID and the
+version of the ZIP being published.
 
 ## API
 
