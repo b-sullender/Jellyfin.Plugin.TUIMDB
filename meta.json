@@ -1,6 +1,6 @@
 {
     "category": "Metadata",
-    "changelog": "Added support for collections",
+    "changelog": "Added cast and crew profile images for the updated TUIMDB API.",
     "description": "Get media metadata from TUIMDB\n",
     "guid": "ccc76c68-2d1e-44bc-b8f6-4760d6c6d5c2",
     "imageUrl": "https://tuimdb.com/jellyfin/tuimdb.png",
@@ -8,6 +8,6 @@
     "overview": "Get media metadata from TUIMDB",
     "owner": "TUIMDB",
     "targetAbi": "10.9.0.0",
-    "timestamp": "2026-08-22T22:43:31Z",
-    "version": "1.2.1.0"
+    "timestamp": "2026-09-17T17:48:54Z",
+    "version": "1.2.2.0"
 }

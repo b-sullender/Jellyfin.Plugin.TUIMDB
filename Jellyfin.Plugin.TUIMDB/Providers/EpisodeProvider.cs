@@ -247,7 +247,8 @@ public class EpisodeProvider :
             return result;
         }
 
-        url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}&includeCast=true";
+        // Cast profile images are opt-in in the TUIMDB season-episodes API.
+        url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}&includeCast=true&includeCastImages=true";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);

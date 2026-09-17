@@ -381,7 +381,8 @@ public class MovieProvider :
             movieUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
         }
 
-        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true&includeCrew=true";
+        // Cast and crew profile images are opt-in in the TUIMDB details API.
+        url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true&includeCastImages=true&includeCrew=true&includeCrewImages=true";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
