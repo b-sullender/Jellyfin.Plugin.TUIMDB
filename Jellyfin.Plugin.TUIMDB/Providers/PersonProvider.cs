@@ -73,7 +73,10 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             string url,
             CancellationToken cancellationToken)
         {
-            _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+            }
 
             return await _httpClient
                 .GetAsync(url, cancellationToken)
@@ -142,7 +145,10 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
                 var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
                 if (response == null)
                 {
-                    _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                    }
                 }
 
                 return response;
@@ -180,7 +186,10 @@ namespace Jellyfin.Plugin.TUIMDB.Providers
             var config = Plugin.Instance.Configuration;
 
             var url = $"{config.ApiBaseUrl}/people/search/?queryString={Uri.EscapeDataString(queryString)}&includeImages=true&language={metadataLanguage}";
-            _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+            }
 
             var response = await GetFromApiAsync<List<TuimdbPeopleSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
             if (response == null || response.Count == 0)

@@ -79,7 +79,10 @@ public class SeasonProvider :
         string url,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        }
 
         return await _httpClient
             .GetAsync(url, cancellationToken)

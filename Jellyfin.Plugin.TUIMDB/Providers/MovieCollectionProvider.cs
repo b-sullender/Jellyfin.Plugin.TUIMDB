@@ -92,10 +92,14 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
         var collectionsIdString = item.GetProviderId("TUIMDB_COLLECTIONS");
         if (string.IsNullOrWhiteSpace(collectionsIdString))
         {
-            _logger.LogDebug(
-                "TUIMDB MovieCollectionProvider: Item '{ItemName}' (Id {ItemId}) has no TUIMDB_COLLECTIONS provider id.",
-                item.Name,
-                item.Id);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB MovieCollectionProvider: Item '{ItemName}' (Id {ItemId}) has no TUIMDB_COLLECTIONS provider id.",
+                    item.Name,
+                    item.Id);
+            }
+
             return ItemUpdateType.None;
         }
 
@@ -105,10 +109,14 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
         var distinctCollectionIds = new HashSet<string>(collectionIds, StringComparer.Ordinal);
         if (distinctCollectionIds.Count == 0)
         {
-            _logger.LogDebug(
-                "TUIMDB MovieCollectionProvider: Item '{ItemName}' (Id {ItemId}) has an empty TUIMDB_COLLECTIONS list.",
-                item.Name,
-                item.Id);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB MovieCollectionProvider: Item '{ItemName}' (Id {ItemId}) has an empty TUIMDB_COLLECTIONS list.",
+                    item.Name,
+                    item.Id);
+            }
+
             return ItemUpdateType.None;
         }
 
@@ -133,9 +141,13 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
 
             if (collectionInfo == null)
             {
-                _logger.LogDebug(
-                    "TUIMDB MovieCollectionProvider: Failed to fetch collection info for UID {Uid}.",
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB MovieCollectionProvider: Failed to fetch collection info for UID {Uid}.",
+                        collectionUidString);
+                }
+
                 continue;
             }
 
@@ -151,10 +163,13 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
 
             if (existing == null)
             {
-                _logger.LogDebug(
-                    "TUIMDB MovieCollectionProvider: Creating new BoxSet '{Name}' for collection UID {Uid}.",
-                    collectionName,
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB MovieCollectionProvider: Creating new BoxSet '{Name}' for collection UID {Uid}.",
+                        collectionName,
+                        collectionUidString);
+                }
 
                 var optionsCreate = new CollectionCreationOptions
                 {
@@ -179,11 +194,14 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
             }
             else
             {
-                _logger.LogDebug(
-                    "TUIMDB MovieCollectionProvider: Adding item '{ItemName}' to existing BoxSet '{CollectionName}' (UID {Uid}).",
-                    item.Name,
-                    existing.Name,
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB MovieCollectionProvider: Adding item '{ItemName}' to existing BoxSet '{CollectionName}' (UID {Uid}).",
+                        item.Name,
+                        existing.Name,
+                        collectionUidString);
+                }
 
                 await _collectionManager
                     .AddToCollectionAsync(existing.Id, new[] { item.Id })
@@ -284,7 +302,10 @@ public class MovieCollectionProvider : ICustomMetadataProvider<Movie>, IHasOrder
 
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB Collections API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB Collections API: Response was empty for URL {Url}", url);
+                }
             }
             else if (_logger.IsEnabled(LogLevel.Debug))
             {

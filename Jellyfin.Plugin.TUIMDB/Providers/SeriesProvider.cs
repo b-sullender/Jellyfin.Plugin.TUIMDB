@@ -419,13 +419,19 @@ public class SeriesProvider :
                 !string.IsNullOrWhiteSpace(episodeOrderId))
             {
                 effectiveEpisodeOrder = episodeOrderId.Trim();
-                _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+                }
             }
             else if (tuimdbConfig.TryGetValue("episode-order", out var episodeOrder) &&
                      !string.IsNullOrWhiteSpace(episodeOrder))
             {
                 effectiveEpisodeOrder = episodeOrder.Trim();
-                _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+                }
             }
         }
 
@@ -447,7 +453,10 @@ public class SeriesProvider :
             ? $"{parsedName.Title} ({year.Value})"
             : parsedName.Title;
 
-        _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
+        }
 
         // Get user metadata language
         string metadataLanguage = searchInfo.MetadataLanguage ?? "en";
@@ -462,7 +471,10 @@ public class SeriesProvider :
         var config = Plugin.Instance.Configuration;
 
         var url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
-        _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+        }
 
         var response = await GetFromApiAsync<List<TuimdbSeriesSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
         if (response == null || response.Count == 0)
@@ -474,11 +486,14 @@ public class SeriesProvider :
         var results = new List<RemoteSearchResult>();
         foreach (var series in response)
         {
-            _logger.LogDebug(
-                "TUIMDB Search: Found series '{Title}' ({Year}) with UID {Uid}",
-                series.Title,
-                series.ReleaseYear,
-                series.Uid);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB Search: Found series '{Title}' ({Year}) with UID {Uid}",
+                    series.Title,
+                    series.ReleaseYear,
+                    series.Uid);
+            }
 
             var result = new RemoteSearchResult
             {
@@ -547,13 +562,19 @@ public class SeriesProvider :
                 !string.IsNullOrWhiteSpace(episodeOrderId))
             {
                 effectiveEpisodeOrder = episodeOrderId.Trim();
-                _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB: Using episode-order-id '{EpisodeOrderId}' from TUIMDB config file", effectiveEpisodeOrder);
+                }
             }
             else if (tuimdbConfig.TryGetValue("episode-order", out var episodeOrder) &&
                      !string.IsNullOrWhiteSpace(episodeOrder))
             {
                 effectiveEpisodeOrder = episodeOrder.Trim();
-                _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB: Using episode-order '{EpisodeOrder}' from TUIMDB config file", effectiveEpisodeOrder);
+                }
             }
         }
 
@@ -579,10 +600,16 @@ public class SeriesProvider :
                 ? $"{parsedName.Title} ({year.Value})"
                 : parsedName.Title;
 
-            _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
+            }
 
             url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}";
-            _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
+            }
 
             var searchResults = await GetFromApiAsync<List<TuimdbSeriesSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
             if (searchResults == null || searchResults.Count == 0)
@@ -601,12 +628,19 @@ public class SeriesProvider :
         }
 
         url = $"{config.ApiBaseUrl}/series/get/?uid={seriesUid}&language={metadataLanguage}";
-        _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
+        }
 
         var seriesInfo = await GetFromApiAsync<TuimdbSeries>(url, config, cancellationToken).ConfigureAwait(false);
         if (seriesInfo == null)
         {
-            _logger.LogDebug("TUIMDB Details: Failed to get series info with UID {Uid}.", seriesUid);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB Details: Failed to get series info with UID {Uid}.", seriesUid);
+            }
+
             return result;
         }
 
@@ -643,17 +677,23 @@ public class SeriesProvider :
             {
                 var joined = string.Join(",", collectionIds);
                 series.SetProviderId("TUIMDB_COLLECTIONS", joined);
-                _logger.LogDebug(
-                    "TUIMDB GetMetadata: Stored collection IDs on series {SeriesUid}: {CollectionIds}",
-                    seriesUid,
-                    joined);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB GetMetadata: Stored collection IDs on series {SeriesUid}: {CollectionIds}",
+                        seriesUid,
+                        joined);
+                }
             }
         }
 
         foreach (var genre in seriesInfo.Genres)
         {
             series.AddGenre(genre.Name);
-            _logger.LogDebug("Added genre: {Genre}", genre.Name);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Added genre: {Genre}", genre.Name);
+            }
         }
 
         series.OfficialRating = seriesInfo.ContentRating;

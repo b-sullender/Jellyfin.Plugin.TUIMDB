@@ -78,7 +78,10 @@ public class MovieProvider :
         string url,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Image: Fetching image from {Url}", url);
+        }
 
         return await _httpClient
             .GetAsync(url, cancellationToken)
@@ -206,7 +209,10 @@ public class MovieProvider :
             var response = await httpResponse.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB API: Response was empty for URL {Url}", url);
+                }
             }
 
             return response;
@@ -243,7 +249,10 @@ public class MovieProvider :
             ? $"{searchInfo.Name} ({year.Value})"
             : searchInfo.Name;
 
-        _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB GetSearchResults: Query string = {QueryString}", queryString);
+        }
 
         // Get user metadata language
         string metadataLanguage = searchInfo.MetadataLanguage ?? "en";
@@ -258,7 +267,10 @@ public class MovieProvider :
         var config = Plugin.Instance.Configuration;
 
         var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
-        _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
+        }
 
         var response = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
         if (response == null || response.Count == 0)
@@ -270,11 +282,14 @@ public class MovieProvider :
         var results = new List<RemoteSearchResult>();
         foreach (var movie in response)
         {
-            _logger.LogDebug(
-                "TUIMDB Search: Found movie '{Title}' ({Year}) with UID {Uid}",
-                movie.Title,
-                movie.ReleaseYear,
-                movie.Uid);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB Search: Found movie '{Title}' ({Year}) with UID {Uid}",
+                    movie.Title,
+                    movie.ReleaseYear,
+                    movie.Uid);
+            }
 
             var result = new RemoteSearchResult
             {
@@ -339,10 +354,16 @@ public class MovieProvider :
                 ? $"{info.Name} ({year.Value})"
                 : info.Name;
 
-            _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
+            }
 
             url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
-            _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+            }
 
             var searchResults = await GetFromApiAsync<List<TuimdbMovieSearchResult>>(url, config, cancellationToken).ConfigureAwait(false);
             if (searchResults == null || searchResults.Count == 0)
@@ -361,12 +382,19 @@ public class MovieProvider :
         }
 
         url = $"{config.ApiBaseUrl}/movies/get/?uid={movieUid}&language={metadataLanguage}&includeCast=true&includeCrew=true";
-        _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
+        }
 
         var movieInfo = await GetFromApiAsync<TuimdbMovie>(url, config, cancellationToken).ConfigureAwait(false);
         if (movieInfo == null)
         {
-            _logger.LogDebug("TUIMDB Details: Failed to get movie info with UID {Uid}.", movieUid);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("TUIMDB Details: Failed to get movie info with UID {Uid}.", movieUid);
+            }
+
             return result;
         }
 
@@ -403,17 +431,23 @@ public class MovieProvider :
             {
                 var joined = string.Join(",", collectionIds);
                 movie.SetProviderId("TUIMDB_COLLECTIONS", joined);
-                _logger.LogDebug(
-                    "TUIMDB GetMetadata: Stored collection IDs on movie {MovieUid}: {CollectionIds}",
-                    movieUid,
-                    joined);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB GetMetadata: Stored collection IDs on movie {MovieUid}: {CollectionIds}",
+                        movieUid,
+                        joined);
+                }
             }
         }
 
         foreach (var genre in movieInfo.Genres)
         {
             movie.AddGenre(genre.Name);
-            _logger.LogDebug("Added genre: {Genre}", genre.Name);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Added genre: {Genre}", genre.Name);
+            }
         }
 
         movie.OfficialRating = movieInfo.ContentRating;

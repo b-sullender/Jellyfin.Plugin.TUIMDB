@@ -234,9 +234,12 @@ public class EpisodeProvider :
         info.SeasonProviderIds.TryGetValue("TUIMDB", out var seasonUid);
         var episodeNumber = info.IndexNumber;
 
-        _logger.LogDebug("TUIMDB Episode GetMetadata: Series UID: {SeriesUid}", seriesUid);
-        _logger.LogDebug("TUIMDB Episode GetMetadata: Season UID: {SeasonUid}", seasonUid);
-        _logger.LogDebug("TUIMDB Episode GetMetadata: Episode number: {EpisodeNumber}", episodeNumber);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Episode GetMetadata: Series UID: {SeriesUid}", seriesUid);
+            _logger.LogDebug("TUIMDB Episode GetMetadata: Season UID: {SeasonUid}", seasonUid);
+            _logger.LogDebug("TUIMDB Episode GetMetadata: Episode number: {EpisodeNumber}", episodeNumber);
+        }
 
         if (string.IsNullOrEmpty(seriesUid) || string.IsNullOrEmpty(seasonUid) || !episodeNumber.HasValue)
         {
@@ -245,7 +248,10 @@ public class EpisodeProvider :
         }
 
         url = $"{config.ApiBaseUrl}/series/season/episodes/?seriesId={seriesUid}&seasonId={seasonUid}&episodeNumber={episodeNumber}&language={metadataLanguage}&includeCast=true";
-        _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+        }
 
         var episodes = await GetFromApiAsync<List<TuimdbEpisode>>(url, config, cancellationToken).ConfigureAwait(false);
         if (episodes == null || episodes.Count == 0)

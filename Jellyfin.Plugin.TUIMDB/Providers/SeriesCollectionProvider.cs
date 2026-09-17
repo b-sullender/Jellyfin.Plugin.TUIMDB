@@ -96,10 +96,14 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
         var collectionsIdString = item.GetProviderId("TUIMDB_COLLECTIONS");
         if (string.IsNullOrWhiteSpace(collectionsIdString))
         {
-            _logger.LogDebug(
-                "TUIMDB SeriesCollectionProvider: Item '{ItemName}' (Id {ItemId}) has no TUIMDB_COLLECTIONS provider id.",
-                item.Name,
-                item.Id);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB SeriesCollectionProvider: Item '{ItemName}' (Id {ItemId}) has no TUIMDB_COLLECTIONS provider id.",
+                    item.Name,
+                    item.Id);
+            }
+
             return ItemUpdateType.None;
         }
 
@@ -109,10 +113,14 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
         var distinctCollectionIds = new HashSet<string>(collectionIds, StringComparer.Ordinal);
         if (distinctCollectionIds.Count == 0)
         {
-            _logger.LogDebug(
-                "TUIMDB SeriesCollectionProvider: Item '{ItemName}' (Id {ItemId}) has an empty TUIMDB_COLLECTIONS list.",
-                item.Name,
-                item.Id);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(
+                    "TUIMDB SeriesCollectionProvider: Item '{ItemName}' (Id {ItemId}) has an empty TUIMDB_COLLECTIONS list.",
+                    item.Name,
+                    item.Id);
+            }
+
             return ItemUpdateType.None;
         }
 
@@ -137,9 +145,13 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
 
             if (collectionInfo == null)
             {
-                _logger.LogDebug(
-                    "TUIMDB SeriesCollectionProvider: Failed to fetch collection info for UID {Uid}.",
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB SeriesCollectionProvider: Failed to fetch collection info for UID {Uid}.",
+                        collectionUidString);
+                }
+
                 continue;
             }
 
@@ -155,10 +167,13 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
 
             if (existing == null)
             {
-                _logger.LogDebug(
-                    "TUIMDB SeriesCollectionProvider: Creating new BoxSet '{Name}' for collection UID {Uid}.",
-                    collectionName,
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB SeriesCollectionProvider: Creating new BoxSet '{Name}' for collection UID {Uid}.",
+                        collectionName,
+                        collectionUidString);
+                }
 
                 var optionsCreate = new CollectionCreationOptions
                 {
@@ -183,11 +198,14 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
             }
             else
             {
-                _logger.LogDebug(
-                    "TUIMDB SeriesCollectionProvider: Adding item '{ItemName}' to existing BoxSet '{CollectionName}' (UID {Uid}).",
-                    item.Name,
-                    existing.Name,
-                    collectionUidString);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug(
+                        "TUIMDB SeriesCollectionProvider: Adding item '{ItemName}' to existing BoxSet '{CollectionName}' (UID {Uid}).",
+                        item.Name,
+                        existing.Name,
+                        collectionUidString);
+                }
 
                 await _collectionManager
                     .AddToCollectionAsync(existing.Id, new[] { item.Id })
@@ -288,7 +306,10 @@ public class SeriesCollectionProvider : ICustomMetadataProvider<Series>, IHasOrd
 
             if (response == null)
             {
-                _logger.LogDebug("TUIMDB Collections API: Response was empty for URL {Url}", url);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("TUIMDB Collections API: Response was empty for URL {Url}", url);
+                }
             }
             else if (_logger.IsEnabled(LogLevel.Debug))
             {
