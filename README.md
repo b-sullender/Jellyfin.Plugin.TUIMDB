@@ -56,6 +56,12 @@ Build and install the plugin directly using:
 bash build-install.sh
 ```
 
+To verify the build without installing files or restarting Jellyfin:
+
+```bash
+bash build-install.sh --dry-run
+```
+
 ### Build Plugin Package
 
 Create the next release package while updating the version, changelog, timestamp,

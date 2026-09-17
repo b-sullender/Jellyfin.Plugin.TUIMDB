@@ -3,11 +3,23 @@
 set -euo pipefail
 
 metadata_value() {
-    grep -oP "\"$1\"\\s*:\\s*\"\\K[^\"]+" meta.json
+    local value
+    value="$(grep -oP "\"$1\"\\s*:\\s*\"\\K[^\"]+" meta.json || true)"
+    if [ -z "$value" ]; then
+        echo "ERROR: Could not read '$1' from meta.json." >&2
+        exit 1
+    fi
+    printf '%s\n' "$value"
 }
 
 build_value() {
-    grep -oP "^$1:\\s*\"\\K[^\"]+" build.yaml
+    local value
+    value="$(grep -oP "^$1:\\s*\"\\K[^\"]+" build.yaml || true)"
+    if [ -z "$value" ]; then
+        echo "ERROR: Could not read '$1' from build.yaml." >&2
+        exit 1
+    fi
+    printf '%s\n' "$value"
 }
 
 escape_metadata_value() {
@@ -18,12 +30,12 @@ validate_metadata() {
     local meta_version build_version assembly_version meta_guid build_guid plugin_guid build_framework project_framework
     meta_version="$(metadata_value version)"
     build_version="$(build_value version)"
-    assembly_version="$(grep -oP '<AssemblyVersion>\\K[^<]+' Directory.Build.props)"
+    assembly_version="$(grep -oP '<AssemblyVersion>\K[^<]+' Directory.Build.props)"
     meta_guid="$(metadata_value guid)"
     build_guid="$(build_value guid)"
-    plugin_guid="$(grep -oP 'Guid\.Parse\("\\K[^\"]+' Jellyfin.Plugin.TUIMDB/Plugin.cs)"
+    plugin_guid="$(grep -oP 'Guid\.Parse\("\K[^"]+' Jellyfin.Plugin.TUIMDB/Plugin.cs)"
     build_framework="$(build_value framework)"
-    project_framework="$(grep -oP '<TargetFramework>\\K[^<]+' Jellyfin.Plugin.TUIMDB/Jellyfin.Plugin.TUIMDB.csproj)"
+    project_framework="$(grep -oP '<TargetFramework>\K[^<]+' Jellyfin.Plugin.TUIMDB/Jellyfin.Plugin.TUIMDB.csproj)"
 
     if [ "$meta_version" != "$build_version" ] || [ "$meta_version" != "$assembly_version" ]; then
         echo "ERROR: version differs between meta.json, build.yaml, and Directory.Build.props."
