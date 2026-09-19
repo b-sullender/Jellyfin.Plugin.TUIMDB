@@ -282,6 +282,36 @@ public class SeasonProvider :
 
         result.Item.SetProviderId("TUIMDB", seasonInfo.Uid.ToString(CultureInfo.InvariantCulture));
 
+        // Request a single condensed cast list for the season, rather than cast lists keyed by episode.
+        url = $"{config.ApiBaseUrl}/series/season/get-cast/?seriesId={seriesUid}&seasonId={seasonInfo.Uid}&language={metadataLanguage}&includeImages=true&episodeKeyed=false";
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("TUIMDB Season GetMetadata: Cast query URL = {Url}", url);
+        }
+
+        var cast = await GetFromApiAsync<List<TuimdbEpisodeCastMember>>(url, config, cancellationToken).ConfigureAwait(false);
+        if (cast is not null && cast.Count != 0)
+        {
+            foreach (var actor in cast)
+            {
+                var personInfo = new PersonInfo
+                {
+                    Name = actor.Name,
+                    Role = actor.Characters,
+                    Type = PersonKind.Actor,
+                    SortOrder = actor.Order
+                };
+
+                if (actor.PrimaryImage is not null)
+                {
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
+                }
+
+                personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
+                result.AddPerson(personInfo);
+            }
+        }
+
         return result;
     }
 }
