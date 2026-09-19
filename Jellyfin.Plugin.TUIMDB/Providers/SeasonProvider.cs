@@ -250,7 +250,6 @@ public class SeasonProvider :
             return result;
         }
 
-        // The season-details endpoint accepts the series order and season number, and returns the season metadata with its condensed cast.
         url = $"{config.ApiBaseUrl}/series/season/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}&includeCast=true&includeCastImages=true";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
