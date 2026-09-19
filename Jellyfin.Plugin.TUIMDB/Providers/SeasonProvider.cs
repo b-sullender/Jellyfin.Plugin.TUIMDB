@@ -283,7 +283,7 @@ public class SeasonProvider :
         result.Item.SetProviderId("TUIMDB", seasonInfo.Uid.ToString(CultureInfo.InvariantCulture));
 
         // Request a single condensed cast list for the season, rather than cast lists keyed by episode.
-        url = $"{config.ApiBaseUrl}/series/season/get-cast/?seriesId={seriesUid}&seasonId={seasonInfo.Uid}&language={metadataLanguage}&includeImages=true&episodeKeyed=false";
+        url = $"{config.ApiBaseUrl}/series/season/cast/get/?seriesId={seriesUid}&seasonId={seasonInfo.Uid}&language={metadataLanguage}&includeImages=true&episodeKeyed=false";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB Season GetMetadata: Cast query URL = {Url}", url);
