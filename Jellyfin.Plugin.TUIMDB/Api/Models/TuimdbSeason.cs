@@ -69,4 +69,11 @@ public class TuimdbSeason
     /// </summary>
     [JsonPropertyName("Primary Poster")]
     public TuimdbSeasonPoster? PrimaryPoster { get; set; }
+
+    /// <summary>
+    /// Gets the condensed cast members for the season.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Cast")]
+    public Collection<TuimdbEpisodeCastMember> Cast { get; private set; } = new();
 }

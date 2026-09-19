@@ -250,20 +250,19 @@ public class SeasonProvider :
             return result;
         }
 
-        url = $"{config.ApiBaseUrl}/series/order/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}";
+        // The season-details endpoint accepts the series order and season number, and returns the season metadata with its condensed cast.
+        url = $"{config.ApiBaseUrl}/series/season/get/?seriesId={seriesUid}&orderId={episodeOrderUid}&seasonNumber={seasonNumber}&language={metadataLanguage}&includeCast=true&includeCastImages=true";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
-            _logger.LogDebug("TUIMDB Season GetMetadata: Query URL = {Url}", url);
+            _logger.LogDebug("TUIMDB Season GetMetadata: Details query URL = {Url}", url);
         }
 
-        var seriesSeasons = await GetFromApiAsync<List<TuimdbSeason>>(url, config, cancellationToken).ConfigureAwait(false);
-        if (seriesSeasons == null || seriesSeasons.Count == 0)
+        var seasonInfo = await GetFromApiAsync<TuimdbSeason>(url, config, cancellationToken).ConfigureAwait(false);
+        if (seasonInfo is null)
         {
-            _logger.LogDebug("TUIMDB: Failed to get season info.");
+            _logger.LogDebug("TUIMDB: Failed to get season details.");
             return result;
         }
-
-        var seasonInfo = seriesSeasons[0];
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
@@ -282,17 +281,9 @@ public class SeasonProvider :
 
         result.Item.SetProviderId("TUIMDB", seasonInfo.Uid.ToString(CultureInfo.InvariantCulture));
 
-        // Request a single condensed cast list for the season, rather than cast lists keyed by episode.
-        url = $"{config.ApiBaseUrl}/series/season/cast/get/?seriesId={seriesUid}&seasonId={seasonInfo.Uid}&language={metadataLanguage}&includeImages=true&episodeKeyed=false";
-        if (_logger.IsEnabled(LogLevel.Debug))
+        if (seasonInfo.Cast.Count != 0)
         {
-            _logger.LogDebug("TUIMDB Season GetMetadata: Cast query URL = {Url}", url);
-        }
-
-        var cast = await GetFromApiAsync<List<TuimdbEpisodeCastMember>>(url, config, cancellationToken).ConfigureAwait(false);
-        if (cast is not null && cast.Count != 0)
-        {
-            foreach (var actor in cast)
+            foreach (var actor in seasonInfo.Cast)
             {
                 var personInfo = new PersonInfo
                 {
