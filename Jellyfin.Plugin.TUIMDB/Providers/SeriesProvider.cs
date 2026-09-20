@@ -627,7 +627,7 @@ public class SeriesProvider :
             seriesUid = searchResults[0].Uid.ToString(CultureInfo.InvariantCulture);
         }
 
-        url = $"{config.ApiBaseUrl}/series/get/?uid={seriesUid}&language={metadataLanguage}";
+        url = $"{config.ApiBaseUrl}/series/get/?uid={seriesUid}&language={metadataLanguage}&includeCast=true&includeCastImages=true";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
@@ -697,6 +697,28 @@ public class SeriesProvider :
         }
 
         series.OfficialRating = seriesInfo.ContentRating;
+
+        if (seriesInfo.Cast is not null && seriesInfo.Cast.Count != 0)
+        {
+            foreach (var actor in seriesInfo.Cast)
+            {
+                var personInfo = new PersonInfo
+                {
+                    Name = actor.Name,
+                    Role = actor.Characters,
+                    Type = PersonKind.Actor,
+                    SortOrder = actor.Order
+                };
+
+                if (actor.PrimaryImage is not null)
+                {
+                    personInfo.ImageUrl = $"{config.PeopleImagesUrl}/{actor.PrimaryImage.Name}";
+                }
+
+                personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
+                result.AddPerson(personInfo);
+            }
+        }
 
         int? episodeOrderUid = null;
 

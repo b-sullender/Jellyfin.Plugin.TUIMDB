@@ -65,6 +65,13 @@ public class TuimdbSeries
     public string ContentRating { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets the condensed cast members for the series.
+    /// </summary>
+    [JsonInclude]
+    [JsonPropertyName("Cast")]
+    public Collection<TuimdbEpisodeCastMember> Cast { get; private set; } = new();
+
+    /// <summary>
     /// Gets the list of collections this series belongs to.
     /// </summary>
     [JsonInclude]
