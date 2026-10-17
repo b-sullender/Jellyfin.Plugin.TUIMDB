@@ -22,10 +22,10 @@ public class TuimdbEpisode
     public int SeriesUid { get; set; }
 
     /// <summary>
-    /// Gets or sets the unique identifier of the episode order.
+    /// Gets or sets the runtime of the episode in minutes.
     /// </summary>
     [JsonPropertyName("Runtime")]
-    public int Runtime { get; set; }
+    public int? Runtime { get; set; }
 
     /// <summary>
     /// Gets or sets the air date of the episode.
