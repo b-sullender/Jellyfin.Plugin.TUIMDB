@@ -10,4 +10,4 @@ category: "Metadata"
 owner: "TUIMDB"
 artifacts:
   - "Jellyfin.Plugin.TUIMDB.dll"
-changelog: "Fix API breaking changes and add cast members to season and series objects."
+changelog: "Added plugin options and fixed a null runtime bug."
