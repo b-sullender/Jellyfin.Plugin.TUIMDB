@@ -470,7 +470,7 @@ public class SeriesProvider :
 
         var config = Plugin.Instance.Configuration;
 
-        var url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
+        var url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}&includeAdult={config.IncludeAdultContentInSearchResults.ToString().ToLowerInvariant()}";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
@@ -605,7 +605,7 @@ public class SeriesProvider :
                 _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
             }
 
-            url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}";
+            url = $"{config.ApiBaseUrl}/series/search/?queryString={Uri.EscapeDataString(queryString)}&includeAdult={config.IncludeAdultContentInSearchResults.ToString().ToLowerInvariant()}";
             if (_logger.IsEnabled(LogLevel.Debug))
             {
                 _logger.LogDebug("TUIMDB Series GetMetadata: Query URL = {Url}", url);
@@ -700,8 +700,19 @@ public class SeriesProvider :
 
         if (seriesInfo.Cast is not null && seriesInfo.Cast.Count != 0)
         {
+            var castMembersAdded = 0;
             foreach (var actor in seriesInfo.Cast)
             {
+                if (config.HideCastMembersWithoutProfileImages && actor.PrimaryImage is null)
+                {
+                    continue;
+                }
+
+                if (config.MaxCastMembers > 0 && castMembersAdded >= config.MaxCastMembers)
+                {
+                    break;
+                }
+
                 var personInfo = new PersonInfo
                 {
                     Name = actor.Name,
@@ -717,6 +728,7 @@ public class SeriesProvider :
 
                 personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
                 result.AddPerson(personInfo);
+                castMembersAdded++;
             }
         }
 

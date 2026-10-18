@@ -266,7 +266,7 @@ public class MovieProvider :
 
         var config = Plugin.Instance.Configuration;
 
-        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}";
+        var url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includePosters=true&language={metadataLanguage}&includeAdult={config.IncludeAdultContentInSearchResults.ToString().ToLowerInvariant()}";
         if (_logger.IsEnabled(LogLevel.Debug))
         {
             _logger.LogDebug("TUIMDB GetSearchResults: Query URL = {Url}", url);
@@ -359,7 +359,7 @@ public class MovieProvider :
                 _logger.LogDebug("TUIMDB GetMetadata: Query string = {QueryString}", queryString);
             }
 
-            url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}";
+            url = $"{config.ApiBaseUrl}/movies/search/?queryString={Uri.EscapeDataString(queryString)}&includeAdult={config.IncludeAdultContentInSearchResults.ToString().ToLowerInvariant()}";
             if (_logger.IsEnabled(LogLevel.Debug))
             {
                 _logger.LogDebug("TUIMDB GetMetadata: Query URL = {Url}", url);
@@ -460,8 +460,19 @@ public class MovieProvider :
 
         if (movieInfo.Cast is not null && movieInfo.Cast.Count != 0)
         {
+            var castMembersAdded = 0;
             foreach (var castMember in movieInfo.Cast)
             {
+                if (config.HideCastMembersWithoutProfileImages && castMember.Person?.PrimaryImage is null)
+                {
+                    continue;
+                }
+
+                if (config.MaxCastMembers > 0 && castMembersAdded >= config.MaxCastMembers)
+                {
+                    break;
+                }
+
                 var personInfo = new PersonInfo
                 {
                     Name = castMember.Person?.Name,
@@ -478,13 +489,25 @@ public class MovieProvider :
                 personInfo.SetProviderId("TUIMDB", castMember.PersonId.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
+                castMembersAdded++;
             }
         }
 
         if (movieInfo.Crew is not null && movieInfo.Crew.Count != 0)
         {
+            var crewMembersAdded = 0;
             foreach (var crewMember in movieInfo.Crew)
             {
+                if (config.HideCrewMembersWithoutProfileImages && crewMember.Person?.PrimaryImage is null)
+                {
+                    continue;
+                }
+
+                if (config.MaxCrewMembers > 0 && crewMembersAdded >= config.MaxCrewMembers)
+                {
+                    break;
+                }
+
                 var personInfo = new PersonInfo
                 {
                     Name = crewMember.Person?.Name,
@@ -501,6 +524,7 @@ public class MovieProvider :
                 personInfo.SetProviderId("TUIMDB", crewMember.PersonId.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
+                crewMembersAdded++;
             }
         }
 

@@ -282,8 +282,19 @@ public class SeasonProvider :
 
         if (seasonInfo.Cast.Count != 0)
         {
+            var castMembersAdded = 0;
             foreach (var actor in seasonInfo.Cast)
             {
+                if (config.HideCastMembersWithoutProfileImages && actor.PrimaryImage is null)
+                {
+                    continue;
+                }
+
+                if (config.MaxCastMembers > 0 && castMembersAdded >= config.MaxCastMembers)
+                {
+                    break;
+                }
+
                 var personInfo = new PersonInfo
                 {
                     Name = actor.Name,
@@ -299,6 +310,7 @@ public class SeasonProvider :
 
                 personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
                 result.AddPerson(personInfo);
+                castMembersAdded++;
             }
         }
 

@@ -13,6 +13,34 @@
                         <label class="inputLabel inputLabelUnfocused" for="ApiKey">API Key</label>
                         <input id="ApiKey" name="ApiKey" type="text" is="emby-input" />
                     </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="IncludeAdultContentInSearchResults" name="IncludeAdultContentInSearchResults" type="checkbox" is="emby-checkbox" />
+                            <span>Include adult content in search results</span>
+                        </label>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxCastMembers">Max Cast Members</label>
+                        <input id="MaxCastMembers" name="MaxCastMembers" type="number" min="0" step="1" is="emby-input" />
+                        <div class="fieldDescription">Maximum cast members added to an item. Set to 0 for unlimited.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxCrewMembers">Max Crew Members</label>
+                        <input id="MaxCrewMembers" name="MaxCrewMembers" type="number" min="0" step="1" is="emby-input" />
+                        <div class="fieldDescription">Maximum crew members added to an item. Set to 0 for unlimited.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="HideCastMembersWithoutProfileImages" name="HideCastMembersWithoutProfileImages" type="checkbox" is="emby-checkbox" />
+                            <span>Hide cast members without profile images</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="HideCrewMembersWithoutProfileImages" name="HideCrewMembersWithoutProfileImages" type="checkbox" is="emby-checkbox" />
+                            <span>Hide crew members without profile images</span>
+                        </label>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -31,6 +59,11 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(TuimdbConfig.pluginUniqueId).then(function (config) {
                         document.querySelector('#ApiKey').value = config.ApiKey;
+                        document.querySelector('#IncludeAdultContentInSearchResults').checked = config.IncludeAdultContentInSearchResults;
+                        document.querySelector('#MaxCastMembers').value = config.MaxCastMembers;
+                        document.querySelector('#MaxCrewMembers').value = config.MaxCrewMembers;
+                        document.querySelector('#HideCastMembersWithoutProfileImages').checked = config.HideCastMembersWithoutProfileImages;
+                        document.querySelector('#HideCrewMembersWithoutProfileImages').checked = config.HideCrewMembersWithoutProfileImages;
                         Dashboard.hideLoadingMsg();
                     });
                 });
@@ -40,6 +73,11 @@
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(TuimdbConfig.pluginUniqueId).then(function (config) {
                     config.ApiKey = document.querySelector('#ApiKey').value;
+                    config.IncludeAdultContentInSearchResults = document.querySelector('#IncludeAdultContentInSearchResults').checked;
+                    config.MaxCastMembers = Math.max(0, parseInt(document.querySelector('#MaxCastMembers').value, 10) || 0);
+                    config.MaxCrewMembers = Math.max(0, parseInt(document.querySelector('#MaxCrewMembers').value, 10) || 0);
+                    config.HideCastMembersWithoutProfileImages = document.querySelector('#HideCastMembersWithoutProfileImages').checked;
+                    config.HideCrewMembersWithoutProfileImages = document.querySelector('#HideCrewMembersWithoutProfileImages').checked;
                     ApiClient.updatePluginConfiguration(TuimdbConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

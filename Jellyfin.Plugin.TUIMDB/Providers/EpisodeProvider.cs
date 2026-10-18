@@ -293,8 +293,19 @@ public class EpisodeProvider :
 
         if (episodeInfo.Cast is not null && episodeInfo.Cast.Count != 0)
         {
+            var castMembersAdded = 0;
             foreach (var actor in episodeInfo.Cast)
             {
+                if (config.HideCastMembersWithoutProfileImages && actor.PrimaryImage is null)
+                {
+                    continue;
+                }
+
+                if (config.MaxCastMembers > 0 && castMembersAdded >= config.MaxCastMembers)
+                {
+                    break;
+                }
+
                 var personInfo = new PersonInfo
                 {
                     Name = actor.Name,
@@ -311,6 +322,7 @@ public class EpisodeProvider :
                 personInfo.SetProviderId("TUIMDB", actor.Uid.ToString(CultureInfo.InvariantCulture));
 
                 result.AddPerson(personInfo);
+                castMembersAdded++;
             }
         }
 

@@ -104,4 +104,29 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets the API key.
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether adult content is included in search results.
+    /// </summary>
+    public bool IncludeAdultContentInSearchResults { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum number of cast members added to an item. A value of 0 means unlimited.
+    /// </summary>
+    public int MaxCastMembers { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum number of crew members added to an item. A value of 0 means unlimited.
+    /// </summary>
+    public int MaxCrewMembers { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether cast members without profile images are hidden.
+    /// </summary>
+    public bool HideCastMembersWithoutProfileImages { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether crew members without profile images are hidden.
+    /// </summary>
+    public bool HideCrewMembersWithoutProfileImages { get; set; }
 }
