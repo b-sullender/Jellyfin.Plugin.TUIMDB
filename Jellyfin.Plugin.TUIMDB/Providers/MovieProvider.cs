@@ -117,6 +117,29 @@ public class MovieProvider :
         return null;
     }
 
+    /// <summary>
+    /// Builds a movie search query from Jellyfin's title and production year.
+    /// </summary>
+    /// <param name="name">The movie title supplied by Jellyfin.</param>
+    /// <param name="year">The movie production year, if available.</param>
+    /// <returns>A title with the production year included at most once.</returns>
+    private static string BuildSearchQuery(string name, int? year)
+    {
+        if (!year.HasValue)
+        {
+            return name;
+        }
+
+        string title = name.TrimEnd();
+        string yearSuffix = $"({year.Value})";
+        if (title.EndsWith(yearSuffix, StringComparison.Ordinal))
+        {
+            return title;
+        }
+
+        return $"{title} {yearSuffix}";
+    }
+
     private static PersonKind MapCrewToPersonType(int roleId)
     {
         if (roleId == 1)
@@ -244,10 +267,7 @@ public class MovieProvider :
         // Use Year from MovieInfo if available, otherwise extract from Path
         int? year = searchInfo.Year ?? ExtractYearFromPath(searchInfo.Path);
 
-        // Build query string including year if available
-        string queryString = year.HasValue
-            ? $"{searchInfo.Name} ({year.Value})"
-            : searchInfo.Name;
+        string queryString = BuildSearchQuery(searchInfo.Name, year);
 
         if (_logger.IsEnabled(LogLevel.Debug))
         {
@@ -349,10 +369,7 @@ public class MovieProvider :
             // Prefer MovieInfo.Year, otherwise parsed year
             int? year = info.Year ?? ExtractYearFromPath(info.Path);
 
-            // Build query string including year if available
-            string queryString = year.HasValue
-                ? $"{info.Name} ({year.Value})"
-                : info.Name;
+            string queryString = BuildSearchQuery(info.Name, year);
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {
