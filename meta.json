@@ -1,6 +1,6 @@
 {
     "category": "Metadata",
-    "changelog": "Added plugin options and fixed a null runtime bug.",
+    "changelog": "Fixed duplicate years in movie search queries.",
     "description": "Get media metadata from TUIMDB\n",
     "guid": "ccc76c68-2d1e-44bc-b8f6-4760d6c6d5c2",
     "imageUrl": "https://tuimdb.com/jellyfin/tuimdb.png",
@@ -8,6 +8,6 @@
     "overview": "Get media metadata from TUIMDB",
     "owner": "TUIMDB",
     "targetAbi": "10.9.0.0",
-    "timestamp": "2026-10-18T13:21:36Z",
-    "version": "1.3.0.0"
+    "timestamp": "2026-10-24T21:49:23Z",
+    "version": "1.3.0.1"
 }
